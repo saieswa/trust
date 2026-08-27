@@ -1,0 +1,16 @@
+fastapi
+uvicorn[standard]
+python-dotenv
+sentence-transformers
+faiss-cpu
+groq
+supabase
+upstash-redis
+pypdf
+python-docx
+olefile
+pandas
+pytest
+beautifulsoup4
+requests
+python-multipart

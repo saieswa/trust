@@ -1,0 +1,9 @@
+__pycache__/
+*.pyc
+.env
+venv/
+env/
+data/uploads/*
+!data/uploads/.gitkeep
+indexes/faiss/*
+!indexes/faiss/.gitkeep

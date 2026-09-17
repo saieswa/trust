@@ -10,7 +10,12 @@ import logging
 from pathlib import Path
 
 import pytest
-from docx import Document
+try:
+    from docx import Document
+    DOCX_AVAILABLE = True
+except Exception:
+    Document = None
+    DOCX_AVAILABLE = False
 from pypdf import PdfWriter
 
 from app.ingestion.loaders import (
@@ -140,6 +145,7 @@ def test_empty_txt_raises(tmp_path: Path) -> None:
         load_document(path, document_id="doc-empty-txt")
 
 
+@pytest.mark.skipif(not DOCX_AVAILABLE, reason="docx is not available on this platform")
 def test_docx_preserves_paragraph_text(tmp_path: Path) -> None:
     path = tmp_path / "memo.docx"
     doc = Document()

@@ -14,9 +14,6 @@ from pathlib import Path
 from typing import Callable, Iterable, Union
 
 import olefile
-from docx import Document
-from docx.table import Table
-from docx.text.paragraph import Paragraph
 from pypdf import PdfReader
 from pypdf.errors import PdfReadError
 
@@ -24,7 +21,7 @@ logger = logging.getLogger(__name__)
 
 PageId = Union[int, str]
 
-NO_READABLE_TEXT = "The uploaded document does not contain readable text."
+NO_READABLE_TEXT = "No readable text was found in this document."
 UNSUPPORTED_TYPE = "Unsupported file type"
 
 
@@ -62,6 +59,9 @@ def load_document(
     ``source_filename`` should be the original upload name. If omitted, the
     on-disk basename is used.
     """
+    if isinstance(file_path, str) and (file_path.startswith("http://") or file_path.startswith("https://")):
+        return load_url(file_path, document_id=document_id)
+
     path = Path(file_path)
     if not path.exists():
         raise ExtractionError(f"File not found: {path.name}")
@@ -187,6 +187,15 @@ def load_txt(path: Path, document_id: str, source_filename: str) -> list[Extract
 
 
 def load_docx(path: Path, document_id: str, source_filename: str) -> list[ExtractedPage]:
+    try:
+        from docx import Document
+        from docx.table import Table
+        from docx.text.paragraph import Paragraph
+    except Exception as exc:
+        raise ExtractionError(
+            f"DOCX support is unavailable on this system: {exc}"
+        ) from exc
+
     try:
         document = Document(str(path))
     except Exception as exc:
@@ -574,6 +583,80 @@ def _log_extraction_summary(document: ExtractedDocument) -> None:
     )
 
 
+def load_url(
+    url: str,
+    document_id: str,
+    timeout: float = 10.0,
+) -> ExtractedDocument:
+    """Fetch and extract readable text from a web URL."""
+    try:
+        import httpx
+        from bs4 import BeautifulSoup
+    except ImportError as e:
+        raise ExtractionError(f"Missing dependency for URL extraction: {e}") from e
+
+    try:
+        response = httpx.get(
+            url,
+            timeout=timeout,
+            follow_redirects=True,
+            headers={"User-Agent": "TrustAwareRAG/1.0 (Research Ingestion Bot)"},
+        )
+        if response.status_code != 200:
+            raise ExtractionError(f"Failed to fetch URL '{url}': HTTP {response.status_code}")
+    except httpx.RequestError as exc:
+        raise ExtractionError(f"Network error while fetching URL '{url}': {exc}") from exc
+
+    html_content = response.text
+    if not html_content.strip():
+        raise ExtractionError(f"No content returned from URL: {url}")
+
+    soup = BeautifulSoup(html_content, "html.parser")
+    for element in soup(["script", "style", "nav", "footer", "header", "noscript", "svg"]):
+        element.decompose()
+
+    text = soup.get_text(separator="\n")
+    lines = [line.strip() for line in text.splitlines() if line.strip()]
+    clean_text = "\n\n".join(lines)
+    if not clean_text:
+        raise ExtractionError(f"Could not extract readable text from URL: {url}")
+
+    page = ExtractedPage(
+        document_id=document_id,
+        source_filename=url,
+        page_number=1,
+        text=clean_text,
+    )
+    doc = ExtractedDocument(
+        document_id=document_id,
+        source_filename=url,
+        file_type="url",
+        pages=(page,),
+    )
+    _log_extraction_summary(doc)
+    return doc
+
+
+def load_url_file(path: Path, document_id: str, filename: str) -> list[ExtractedPage]:
+    """Extract URL from a .url shortcut file and fetch content."""
+    raw = path.read_text(encoding="utf-8", errors="ignore")
+    target_url = None
+    for line in raw.splitlines():
+        line = line.strip()
+        if line.lower().startswith("url="):
+            target_url = line.split("=", 1)[1].strip()
+            break
+        elif line.startswith("http://") or line.startswith("https://"):
+            target_url = line
+            break
+
+    if not target_url:
+        raise ExtractionError(f"No valid URL found in '{filename}'")
+
+    doc = load_url(target_url, document_id=document_id)
+    return list(doc.pages)
+
+
 _LOADERS: dict[str, Callable[[Path, str, str], list[ExtractedPage]]] = {
     ".pdf": load_pdf,
     ".txt": load_txt,
@@ -581,4 +664,5 @@ _LOADERS: dict[str, Callable[[Path, str, str], list[ExtractedPage]]] = {
     ".docx": load_docx,
     ".csv": load_csv,
     ".json": load_json,
+    ".url": load_url_file,
 }

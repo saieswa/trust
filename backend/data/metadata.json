@@ -1,0 +1,1286 @@
+{
+  "doc-test-1eaef044": {
+    "contradictions": [
+      {
+        "contradiction": true,
+        "chunk_a": "chunk-85",
+        "chunk_b": "chunk-72",
+        "reason": "Direct numerical contradiction on 'model accuracy': chunk 'chunk-85' reports '85', whereas chunk 'chunk-72' reports '72'.",
+        "severity": "high",
+        "claim_a": "model accuracy is 85",
+        "claim_b": "model accuracy is 72",
+        "chunk_id_a": "chunk-85",
+        "chunk_id_b": "chunk-72",
+        "explanation": "Direct numerical contradiction on 'model accuracy': chunk 'chunk-85' reports '85', whereas chunk 'chunk-72' reports '72'.",
+        "query": "What is the accuracy?",
+        "timestamp": "2026-09-10T19:53:00.148822"
+      }
+    ]
+  },
+  "doc-test-bcd5cd7b": {
+    "contradictions": [
+      {
+        "contradiction": true,
+        "chunk_a": "chunk-85",
+        "chunk_b": "chunk-72",
+        "reason": "Direct numerical contradiction on 'model accuracy': chunk 'chunk-85' reports '85%', whereas chunk 'chunk-72' reports '72%'.",
+        "severity": "high",
+        "claim_a": "model accuracy is 85%",
+        "claim_b": "model accuracy is 72%",
+        "chunk_id_a": "chunk-85",
+        "chunk_id_b": "chunk-72",
+        "explanation": "Direct numerical contradiction on 'model accuracy': chunk 'chunk-85' reports '85%', whereas chunk 'chunk-72' reports '72%'.",
+        "query": "What is the accuracy?",
+        "timestamp": "2026-09-10T19:53:21.763028"
+      }
+    ]
+  },
+  "api-doc-5994bd": {
+    "contradictions": [
+      {
+        "contradiction": true,
+        "chunk_a": "c1",
+        "chunk_b": "c2",
+        "reason": "Test conflict",
+        "severity": "high",
+        "timestamp": "2026-09-10T19:53:21.828627"
+      }
+    ]
+  },
+  "doc-test-398abc92": {
+    "contradictions": [
+      {
+        "contradiction": true,
+        "chunk_a": "chunk-85",
+        "chunk_b": "chunk-72",
+        "reason": "Direct numerical contradiction on 'model accuracy': chunk 'chunk-85' reports '85%', whereas chunk 'chunk-72' reports '72%'.",
+        "severity": "high",
+        "claim_a": "model accuracy is 85%",
+        "claim_b": "model accuracy is 72%",
+        "chunk_id_a": "chunk-85",
+        "chunk_id_b": "chunk-72",
+        "explanation": "Direct numerical contradiction on 'model accuracy': chunk 'chunk-85' reports '85%', whereas chunk 'chunk-72' reports '72%'.",
+        "query": "What is the accuracy?",
+        "timestamp": "2026-09-10T19:53:42.114109"
+      }
+    ]
+  },
+  "api-doc-5a68f1": {
+    "contradictions": [
+      {
+        "contradiction": true,
+        "chunk_a": "c1",
+        "chunk_b": "c2",
+        "reason": "Test conflict",
+        "severity": "high",
+        "timestamp": "2026-09-10T19:53:42.139798"
+      }
+    ]
+  },
+  "doc-experiment": {
+    "contradictions": [
+      {
+        "contradiction": true,
+        "chunk_a": "doc-experiment::chunk-0001",
+        "chunk_b": "doc-experiment::chunk-0002",
+        "reason": "Direct numerical contradiction on 'learning rate was': chunk 'doc-experiment::chunk-0001' reports '0.001', whereas chunk 'doc-experiment::chunk-0002' reports '0.05'.",
+        "severity": "high",
+        "claim_a": "learning rate was is 0.001",
+        "claim_b": "learning rate was is 0.05",
+        "chunk_id_a": "doc-experiment::chunk-0001",
+        "chunk_id_b": "doc-experiment::chunk-0002",
+        "explanation": "Direct numerical contradiction on 'learning rate was': chunk 'doc-experiment::chunk-0001' reports '0.001', whereas chunk 'doc-experiment::chunk-0002' reports '0.05'.",
+        "query": "What was the learning rate used during model training?",
+        "timestamp": "2026-09-10T19:53:42.190946"
+      }
+    ]
+  },
+  "doc-test-ccafc855": {
+    "contradictions": [
+      {
+        "contradiction": true,
+        "chunk_a": "chunk-85",
+        "chunk_b": "chunk-72",
+        "reason": "Direct numerical contradiction on 'model accuracy': chunk 'chunk-85' reports '85%', whereas chunk 'chunk-72' reports '72%'.",
+        "severity": "high",
+        "claim_a": "model accuracy is 85%",
+        "claim_b": "model accuracy is 72%",
+        "chunk_id_a": "chunk-85",
+        "chunk_id_b": "chunk-72",
+        "explanation": "Direct numerical contradiction on 'model accuracy': chunk 'chunk-85' reports '85%', whereas chunk 'chunk-72' reports '72%'.",
+        "query": "What is the accuracy?",
+        "timestamp": "2026-09-10T19:55:03.965385"
+      }
+    ]
+  },
+  "api-doc-846a30": {
+    "contradictions": [
+      {
+        "contradiction": true,
+        "chunk_a": "c1",
+        "chunk_b": "c2",
+        "reason": "Test conflict",
+        "severity": "high",
+        "timestamp": "2026-09-10T19:55:03.991181"
+      }
+    ]
+  },
+  "doc-test-c264a428": {
+    "contradictions": [
+      {
+        "contradiction": true,
+        "chunk_a": "chunk-85",
+        "chunk_b": "chunk-72",
+        "reason": "Direct numerical contradiction on 'model accuracy': chunk 'chunk-85' reports '85%', whereas chunk 'chunk-72' reports '72%'.",
+        "severity": "high",
+        "claim_a": "model accuracy is 85%",
+        "claim_b": "model accuracy is 72%",
+        "chunk_id_a": "chunk-85",
+        "chunk_id_b": "chunk-72",
+        "explanation": "Direct numerical contradiction on 'model accuracy': chunk 'chunk-85' reports '85%', whereas chunk 'chunk-72' reports '72%'.",
+        "query": "What is the accuracy?",
+        "timestamp": "2026-09-10T19:55:17.108990"
+      }
+    ]
+  },
+  "api-doc-ac2d5d": {
+    "contradictions": [
+      {
+        "contradiction": true,
+        "chunk_a": "c1",
+        "chunk_b": "c2",
+        "reason": "Test conflict",
+        "severity": "high",
+        "timestamp": "2026-09-10T19:55:17.119640"
+      }
+    ]
+  },
+  "doc-test-9c052f93": {
+    "contradictions": [
+      {
+        "contradiction": true,
+        "chunk_a": "chunk-85",
+        "chunk_b": "chunk-72",
+        "reason": "Direct numerical contradiction on 'model accuracy': chunk 'chunk-85' reports '85%', whereas chunk 'chunk-72' reports '72%'.",
+        "severity": "high",
+        "claim_a": "model accuracy is 85%",
+        "claim_b": "model accuracy is 72%",
+        "chunk_id_a": "chunk-85",
+        "chunk_id_b": "chunk-72",
+        "explanation": "Direct numerical contradiction on 'model accuracy': chunk 'chunk-85' reports '85%', whereas chunk 'chunk-72' reports '72%'.",
+        "query": "What is the accuracy?",
+        "timestamp": "2026-09-10T20:02:12.274693"
+      }
+    ]
+  },
+  "api-doc-dcc534": {
+    "contradictions": [
+      {
+        "contradiction": true,
+        "chunk_a": "c1",
+        "chunk_b": "c2",
+        "reason": "Test conflict",
+        "severity": "high",
+        "timestamp": "2026-09-10T20:02:12.285705"
+      }
+    ]
+  },
+  "doc-test-f3831ec4": {
+    "contradictions": [
+      {
+        "contradiction": true,
+        "chunk_a": "chunk-85",
+        "chunk_b": "chunk-72",
+        "reason": "Direct numerical contradiction on 'model accuracy': chunk 'chunk-85' reports '85%', whereas chunk 'chunk-72' reports '72%'.",
+        "severity": "high",
+        "claim_a": "model accuracy is 85%",
+        "claim_b": "model accuracy is 72%",
+        "chunk_id_a": "chunk-85",
+        "chunk_id_b": "chunk-72",
+        "explanation": "Direct numerical contradiction on 'model accuracy': chunk 'chunk-85' reports '85%', whereas chunk 'chunk-72' reports '72%'.",
+        "query": "What is the accuracy?",
+        "timestamp": "2026-09-10T20:06:33.375415"
+      }
+    ]
+  },
+  "api-doc-3fe599": {
+    "contradictions": [
+      {
+        "contradiction": true,
+        "chunk_a": "c1",
+        "chunk_b": "c2",
+        "reason": "Test conflict",
+        "severity": "high",
+        "timestamp": "2026-09-10T20:06:33.394536"
+      }
+    ]
+  },
+  "doc-test-e1cc448f": {
+    "contradictions": [
+      {
+        "contradiction": true,
+        "chunk_a": "chunk-85",
+        "chunk_b": "chunk-72",
+        "reason": "Direct numerical contradiction on 'model accuracy': chunk 'chunk-85' reports '85%', whereas chunk 'chunk-72' reports '72%'.",
+        "severity": "high",
+        "claim_a": "model accuracy is 85%",
+        "claim_b": "model accuracy is 72%",
+        "chunk_id_a": "chunk-85",
+        "chunk_id_b": "chunk-72",
+        "explanation": "Direct numerical contradiction on 'model accuracy': chunk 'chunk-85' reports '85%', whereas chunk 'chunk-72' reports '72%'.",
+        "query": "What is the accuracy?",
+        "timestamp": "2026-09-10T20:06:46.569345"
+      }
+    ]
+  },
+  "api-doc-d4ce18": {
+    "contradictions": [
+      {
+        "contradiction": true,
+        "chunk_a": "c1",
+        "chunk_b": "c2",
+        "reason": "Test conflict",
+        "severity": "high",
+        "timestamp": "2026-09-10T20:06:46.581139"
+      }
+    ]
+  },
+  "doc-test-2f91b0a8": {
+    "contradictions": [
+      {
+        "contradiction": true,
+        "chunk_a": "chunk-85",
+        "chunk_b": "chunk-72",
+        "reason": "Direct numerical contradiction on 'model accuracy': chunk 'chunk-85' reports '85%', whereas chunk 'chunk-72' reports '72%'.",
+        "severity": "high",
+        "claim_a": "model accuracy is 85%",
+        "claim_b": "model accuracy is 72%",
+        "chunk_id_a": "chunk-85",
+        "chunk_id_b": "chunk-72",
+        "explanation": "Direct numerical contradiction on 'model accuracy': chunk 'chunk-85' reports '85%', whereas chunk 'chunk-72' reports '72%'.",
+        "query": "What is the accuracy?",
+        "timestamp": "2026-09-10T20:07:41.663431"
+      }
+    ]
+  },
+  "api-doc-b202fc": {
+    "contradictions": [
+      {
+        "contradiction": true,
+        "chunk_a": "c1",
+        "chunk_b": "c2",
+        "reason": "Test conflict",
+        "severity": "high",
+        "timestamp": "2026-09-10T20:07:41.675943"
+      }
+    ]
+  },
+  "doc-test-99ca8de3": {
+    "contradictions": [
+      {
+        "contradiction": true,
+        "chunk_a": "chunk-85",
+        "chunk_b": "chunk-72",
+        "reason": "Direct numerical contradiction on 'model accuracy': chunk 'chunk-85' reports '85%', whereas chunk 'chunk-72' reports '72%'.",
+        "severity": "high",
+        "claim_a": "model accuracy is 85%",
+        "claim_b": "model accuracy is 72%",
+        "chunk_id_a": "chunk-85",
+        "chunk_id_b": "chunk-72",
+        "explanation": "Direct numerical contradiction on 'model accuracy': chunk 'chunk-85' reports '85%', whereas chunk 'chunk-72' reports '72%'.",
+        "query": "What is the accuracy?",
+        "timestamp": "2026-09-10T20:11:46.410778"
+      }
+    ]
+  },
+  "api-doc-abdc72": {
+    "contradictions": [
+      {
+        "contradiction": true,
+        "chunk_a": "c1",
+        "chunk_b": "c2",
+        "reason": "Test conflict",
+        "severity": "high",
+        "timestamp": "2026-09-10T20:11:46.425027"
+      }
+    ]
+  },
+  "doc-test-379fa26e": {
+    "contradictions": [
+      {
+        "contradiction": true,
+        "chunk_a": "chunk-85",
+        "chunk_b": "chunk-72",
+        "reason": "Direct numerical contradiction on 'model accuracy': chunk 'chunk-85' reports '85%', whereas chunk 'chunk-72' reports '72%'.",
+        "severity": "high",
+        "claim_a": "model accuracy is 85%",
+        "claim_b": "model accuracy is 72%",
+        "chunk_id_a": "chunk-85",
+        "chunk_id_b": "chunk-72",
+        "explanation": "Direct numerical contradiction on 'model accuracy': chunk 'chunk-85' reports '85%', whereas chunk 'chunk-72' reports '72%'.",
+        "query": "What is the accuracy?",
+        "timestamp": "2026-09-10T20:16:21.551316"
+      }
+    ]
+  },
+  "api-doc-75c968": {
+    "contradictions": [
+      {
+        "contradiction": true,
+        "chunk_a": "c1",
+        "chunk_b": "c2",
+        "reason": "Test conflict",
+        "severity": "high",
+        "timestamp": "2026-09-10T20:16:21.568097"
+      }
+    ]
+  },
+  "doc-test-4d02b8c9": {
+    "contradictions": [
+      {
+        "contradiction": true,
+        "chunk_a": "chunk-85",
+        "chunk_b": "chunk-72",
+        "reason": "Direct numerical contradiction on 'model accuracy': chunk 'chunk-85' reports '85%', whereas chunk 'chunk-72' reports '72%'.",
+        "severity": "high",
+        "claim_a": "model accuracy is 85%",
+        "claim_b": "model accuracy is 72%",
+        "chunk_id_a": "chunk-85",
+        "chunk_id_b": "chunk-72",
+        "explanation": "Direct numerical contradiction on 'model accuracy': chunk 'chunk-85' reports '85%', whereas chunk 'chunk-72' reports '72%'.",
+        "query": "What is the accuracy?",
+        "timestamp": "2026-09-10T20:22:47.620856"
+      }
+    ]
+  },
+  "api-doc-29ee8b": {
+    "contradictions": [
+      {
+        "contradiction": true,
+        "chunk_a": "c1",
+        "chunk_b": "c2",
+        "reason": "Test conflict",
+        "severity": "high",
+        "timestamp": "2026-09-10T20:22:47.635524"
+      }
+    ]
+  },
+  "doc-test-a4c22a8d": {
+    "contradictions": [
+      {
+        "contradiction": true,
+        "chunk_a": "chunk-85",
+        "chunk_b": "chunk-72",
+        "reason": "Direct numerical contradiction on 'model accuracy': chunk 'chunk-85' reports '85%', whereas chunk 'chunk-72' reports '72%'.",
+        "severity": "high",
+        "claim_a": "model accuracy is 85%",
+        "claim_b": "model accuracy is 72%",
+        "chunk_id_a": "chunk-85",
+        "chunk_id_b": "chunk-72",
+        "explanation": "Direct numerical contradiction on 'model accuracy': chunk 'chunk-85' reports '85%', whereas chunk 'chunk-72' reports '72%'.",
+        "query": "What is the accuracy?",
+        "timestamp": "2026-09-10T20:37:05.028924"
+      }
+    ]
+  },
+  "api-doc-eafc58": {
+    "contradictions": [
+      {
+        "contradiction": true,
+        "chunk_a": "c1",
+        "chunk_b": "c2",
+        "reason": "Test conflict",
+        "severity": "high",
+        "timestamp": "2026-09-10T20:37:05.036526"
+      }
+    ]
+  },
+  "doc-test-89137f55": {
+    "contradictions": [
+      {
+        "contradiction": true,
+        "chunk_a": "chunk-85",
+        "chunk_b": "chunk-72",
+        "reason": "Direct numerical contradiction on 'model accuracy': chunk 'chunk-85' reports '85%', whereas chunk 'chunk-72' reports '72%'.",
+        "severity": "high",
+        "claim_a": "model accuracy is 85%",
+        "claim_b": "model accuracy is 72%",
+        "chunk_id_a": "chunk-85",
+        "chunk_id_b": "chunk-72",
+        "explanation": "Direct numerical contradiction on 'model accuracy': chunk 'chunk-85' reports '85%', whereas chunk 'chunk-72' reports '72%'.",
+        "query": "What is the accuracy?",
+        "timestamp": "2026-09-10T20:41:12.022749"
+      }
+    ]
+  },
+  "api-doc-18e46b": {
+    "contradictions": [
+      {
+        "contradiction": true,
+        "chunk_a": "c1",
+        "chunk_b": "c2",
+        "reason": "Test conflict",
+        "severity": "high",
+        "timestamp": "2026-09-10T20:41:12.030546"
+      }
+    ]
+  },
+  "doc-test-8a09a594": {
+    "contradictions": [
+      {
+        "contradiction": true,
+        "chunk_a": "chunk-85",
+        "chunk_b": "chunk-72",
+        "reason": "Direct numerical contradiction on 'model accuracy': chunk 'chunk-85' reports '85%', whereas chunk 'chunk-72' reports '72%'.",
+        "severity": "high",
+        "claim_a": "model accuracy is 85%",
+        "claim_b": "model accuracy is 72%",
+        "chunk_id_a": "chunk-85",
+        "chunk_id_b": "chunk-72",
+        "explanation": "Direct numerical contradiction on 'model accuracy': chunk 'chunk-85' reports '85%', whereas chunk 'chunk-72' reports '72%'.",
+        "query": "What is the accuracy?",
+        "timestamp": "2026-09-10T20:43:01.138822"
+      }
+    ]
+  },
+  "api-doc-9f6cb8": {
+    "contradictions": [
+      {
+        "contradiction": true,
+        "chunk_a": "c1",
+        "chunk_b": "c2",
+        "reason": "Test conflict",
+        "severity": "high",
+        "timestamp": "2026-09-10T20:43:01.152540"
+      }
+    ]
+  },
+  "doc-test-751dcd36": {
+    "contradictions": [
+      {
+        "contradiction": true,
+        "chunk_a": "chunk-85",
+        "chunk_b": "chunk-72",
+        "reason": "Direct numerical contradiction on 'model accuracy': chunk 'chunk-85' reports '85%', whereas chunk 'chunk-72' reports '72%'.",
+        "severity": "high",
+        "claim_a": "model accuracy is 85%",
+        "claim_b": "model accuracy is 72%",
+        "chunk_id_a": "chunk-85",
+        "chunk_id_b": "chunk-72",
+        "explanation": "Direct numerical contradiction on 'model accuracy': chunk 'chunk-85' reports '85%', whereas chunk 'chunk-72' reports '72%'.",
+        "query": "What is the accuracy?",
+        "timestamp": "2026-09-10T20:46:01.270351"
+      }
+    ]
+  },
+  "api-doc-4ed8ed": {
+    "contradictions": [
+      {
+        "contradiction": true,
+        "chunk_a": "c1",
+        "chunk_b": "c2",
+        "reason": "Test conflict",
+        "severity": "high",
+        "timestamp": "2026-09-10T20:46:01.301186"
+      }
+    ]
+  },
+  "doc-test-e6553145": {
+    "contradictions": [
+      {
+        "contradiction": true,
+        "chunk_a": "chunk-85",
+        "chunk_b": "chunk-72",
+        "reason": "Direct numerical contradiction on 'model accuracy': chunk 'chunk-85' reports '85%', whereas chunk 'chunk-72' reports '72%'.",
+        "severity": "high",
+        "claim_a": "model accuracy is 85%",
+        "claim_b": "model accuracy is 72%",
+        "chunk_id_a": "chunk-85",
+        "chunk_id_b": "chunk-72",
+        "explanation": "Direct numerical contradiction on 'model accuracy': chunk 'chunk-85' reports '85%', whereas chunk 'chunk-72' reports '72%'.",
+        "query": "What is the accuracy?",
+        "timestamp": "2026-09-10T20:49:55.337377"
+      }
+    ]
+  },
+  "api-doc-0eed7b": {
+    "contradictions": [
+      {
+        "contradiction": true,
+        "chunk_a": "c1",
+        "chunk_b": "c2",
+        "reason": "Test conflict",
+        "severity": "high",
+        "timestamp": "2026-09-10T20:49:55.344391"
+      }
+    ]
+  },
+  "0d00e873-b187-4652-94c5-ccf88dbddd5f": {
+    "document_id": "0d00e873-b187-4652-94c5-ccf88dbddd5f",
+    "filename": "paper_a.txt",
+    "file_type": "txt",
+    "upload_date": "2026-09-10T20:49:55.465121",
+    "chunks_count": 1
+  },
+  "32f82672-9e52-4495-aa01-e9e45d3eaf6a": {
+    "document_id": "32f82672-9e52-4495-aa01-e9e45d3eaf6a",
+    "filename": "paper_b.txt",
+    "file_type": "txt",
+    "upload_date": "2026-09-10T20:49:55.466630",
+    "chunks_count": 1
+  },
+  "doc-test-f0a8603b": {
+    "contradictions": [
+      {
+        "contradiction": true,
+        "chunk_a": "chunk-85",
+        "chunk_b": "chunk-72",
+        "reason": "Direct numerical contradiction on 'model accuracy': chunk 'chunk-85' reports '85%', whereas chunk 'chunk-72' reports '72%'.",
+        "severity": "high",
+        "claim_a": "model accuracy is 85%",
+        "claim_b": "model accuracy is 72%",
+        "chunk_id_a": "chunk-85",
+        "chunk_id_b": "chunk-72",
+        "explanation": "Direct numerical contradiction on 'model accuracy': chunk 'chunk-85' reports '85%', whereas chunk 'chunk-72' reports '72%'.",
+        "query": "What is the accuracy?",
+        "timestamp": "2026-09-10T20:58:45.928563"
+      }
+    ]
+  },
+  "api-doc-283627": {
+    "contradictions": [
+      {
+        "contradiction": true,
+        "chunk_a": "c1",
+        "chunk_b": "c2",
+        "reason": "Test conflict",
+        "severity": "high",
+        "timestamp": "2026-09-10T20:58:45.943638"
+      }
+    ]
+  },
+  "780ed418-b014-490f-b109-750efe8a52d9": {
+    "document_id": "780ed418-b014-490f-b109-750efe8a52d9",
+    "filename": "paper_a.txt",
+    "file_type": "txt",
+    "upload_date": "2026-09-10T20:58:46.179438",
+    "chunks_count": 1
+  },
+  "0423f2fa-0af1-4ca3-b48d-b3c8614ae5ec": {
+    "document_id": "0423f2fa-0af1-4ca3-b48d-b3c8614ae5ec",
+    "filename": "paper_b.txt",
+    "file_type": "txt",
+    "upload_date": "2026-09-10T20:58:46.193313",
+    "chunks_count": 1
+  },
+  "doc-test-422eba00": {
+    "contradictions": [
+      {
+        "contradiction": true,
+        "chunk_a": "chunk-85",
+        "chunk_b": "chunk-72",
+        "reason": "Direct numerical contradiction on 'model accuracy': chunk 'chunk-85' reports '85%', whereas chunk 'chunk-72' reports '72%'.",
+        "severity": "high",
+        "claim_a": "model accuracy is 85%",
+        "claim_b": "model accuracy is 72%",
+        "chunk_id_a": "chunk-85",
+        "chunk_id_b": "chunk-72",
+        "explanation": "Direct numerical contradiction on 'model accuracy': chunk 'chunk-85' reports '85%', whereas chunk 'chunk-72' reports '72%'.",
+        "query": "What is the accuracy?",
+        "timestamp": "2026-09-10T21:05:21.170560"
+      }
+    ]
+  },
+  "api-doc-c5cccc": {
+    "contradictions": [
+      {
+        "contradiction": true,
+        "chunk_a": "c1",
+        "chunk_b": "c2",
+        "reason": "Test conflict",
+        "severity": "high",
+        "timestamp": "2026-09-10T21:05:21.177673"
+      }
+    ]
+  },
+  "d3558b7c-9242-442e-9289-46c5a74e47a5": {
+    "document_id": "d3558b7c-9242-442e-9289-46c5a74e47a5",
+    "filename": "paper_a.txt",
+    "file_type": "txt",
+    "upload_date": "2026-09-10T21:05:21.253624",
+    "chunks_count": 1
+  },
+  "1e18c8fd-b3a0-4439-9cc0-263d381fd7b2": {
+    "document_id": "1e18c8fd-b3a0-4439-9cc0-263d381fd7b2",
+    "filename": "paper_b.txt",
+    "file_type": "txt",
+    "upload_date": "2026-09-10T21:05:21.259541",
+    "chunks_count": 1
+  },
+  "7a56c4a3-4ba1-4796-81e1-38f78ec5cae7": {
+    "document_id": "7a56c4a3-4ba1-4796-81e1-38f78ec5cae7",
+    "filename": "binary search explained.pdf",
+    "file_type": "pdf",
+    "upload_date": "2026-09-10T21:09:24.776458",
+    "chunks_count": 4
+  },
+  "doc-test-78c9dda6": {
+    "contradictions": [
+      {
+        "contradiction": true,
+        "chunk_a": "chunk-85",
+        "chunk_b": "chunk-72",
+        "reason": "Direct numerical contradiction on 'model accuracy': chunk 'chunk-85' reports '85%', whereas chunk 'chunk-72' reports '72%'.",
+        "severity": "high",
+        "claim_a": "model accuracy is 85%",
+        "claim_b": "model accuracy is 72%",
+        "chunk_id_a": "chunk-85",
+        "chunk_id_b": "chunk-72",
+        "explanation": "Direct numerical contradiction on 'model accuracy': chunk 'chunk-85' reports '85%', whereas chunk 'chunk-72' reports '72%'.",
+        "query": "What is the accuracy?",
+        "timestamp": "2026-09-10T21:25:15.087641"
+      }
+    ]
+  },
+  "api-doc-a70bd5": {
+    "contradictions": [
+      {
+        "contradiction": true,
+        "chunk_a": "c1",
+        "chunk_b": "c2",
+        "reason": "Test conflict",
+        "severity": "high",
+        "timestamp": "2026-09-10T21:25:15.096289"
+      }
+    ]
+  },
+  "8402510e-fcea-4d45-9321-625a824082fc": {
+    "document_id": "8402510e-fcea-4d45-9321-625a824082fc",
+    "filename": "paper_a.txt",
+    "file_type": "txt",
+    "upload_date": "2026-09-10T21:25:15.177411",
+    "chunks_count": 1
+  },
+  "7f531719-db20-451f-8177-cc9311d6a770": {
+    "document_id": "7f531719-db20-451f-8177-cc9311d6a770",
+    "filename": "paper_b.txt",
+    "file_type": "txt",
+    "upload_date": "2026-09-10T21:25:15.183453",
+    "chunks_count": 1
+  },
+  "a1ca9f9d-daf3-425e-9f7b-e7129eac47c8": {
+    "document_id": "a1ca9f9d-daf3-425e-9f7b-e7129eac47c8",
+    "filename": "paper_a.txt",
+    "file_type": "txt",
+    "upload_date": "2026-09-10T21:25:57.464515",
+    "chunks_count": 1
+  },
+  "faf09b73-ada3-4ef6-82a9-95b35064a39c": {
+    "document_id": "faf09b73-ada3-4ef6-82a9-95b35064a39c",
+    "filename": "paper_b.txt",
+    "file_type": "txt",
+    "upload_date": "2026-09-10T21:25:57.480177",
+    "chunks_count": 1
+  },
+  "doc-test-3669384d": {
+    "contradictions": [
+      {
+        "contradiction": true,
+        "chunk_a": "chunk-85",
+        "chunk_b": "chunk-72",
+        "reason": "Direct numerical contradiction on 'model accuracy': chunk 'chunk-85' reports '85%', whereas chunk 'chunk-72' reports '72%'.",
+        "severity": "high",
+        "claim_a": "model accuracy is 85%",
+        "claim_b": "model accuracy is 72%",
+        "chunk_id_a": "chunk-85",
+        "chunk_id_b": "chunk-72",
+        "explanation": "Direct numerical contradiction on 'model accuracy': chunk 'chunk-85' reports '85%', whereas chunk 'chunk-72' reports '72%'.",
+        "query": "What is the accuracy?",
+        "timestamp": "2026-09-10T21:26:07.671955"
+      }
+    ]
+  },
+  "api-doc-9246f8": {
+    "contradictions": [
+      {
+        "contradiction": true,
+        "chunk_a": "c1",
+        "chunk_b": "c2",
+        "reason": "Test conflict",
+        "severity": "high",
+        "timestamp": "2026-09-10T21:26:07.679569"
+      }
+    ]
+  },
+  "36ce7aa6-da6e-49cb-afbd-27f303c512d2": {
+    "document_id": "36ce7aa6-da6e-49cb-afbd-27f303c512d2",
+    "filename": "paper_a.txt",
+    "file_type": "txt",
+    "upload_date": "2026-09-10T21:26:07.761684",
+    "chunks_count": 1
+  },
+  "f2d8c368-2313-4ac8-9c8f-163b5926497c": {
+    "document_id": "f2d8c368-2313-4ac8-9c8f-163b5926497c",
+    "filename": "paper_b.txt",
+    "file_type": "txt",
+    "upload_date": "2026-09-10T21:26:07.767359",
+    "chunks_count": 1
+  },
+  "54261cab-d886-4427-9306-66fee2b1c027": {
+    "document_id": "54261cab-d886-4427-9306-66fee2b1c027",
+    "filename": "../../../../evil_payload.txt",
+    "file_type": "txt",
+    "upload_date": "2026-09-10T21:31:49.561558",
+    "chunks_count": 1
+  },
+  "830ae430-b4ef-4952-b90a-f166e2747e03": {
+    "document_id": "830ae430-b4ef-4952-b90a-f166e2747e03",
+    "filename": "../../../../evil_payload.txt",
+    "file_type": "txt",
+    "upload_date": "2026-09-10T21:32:34.894564",
+    "chunks_count": 1
+  },
+  "doc-test-45313682": {
+    "contradictions": [
+      {
+        "contradiction": true,
+        "chunk_a": "chunk-85",
+        "chunk_b": "chunk-72",
+        "reason": "Direct numerical contradiction on 'model accuracy': chunk 'chunk-85' reports '85%', whereas chunk 'chunk-72' reports '72%'.",
+        "severity": "high",
+        "claim_a": "model accuracy is 85%",
+        "claim_b": "model accuracy is 72%",
+        "chunk_id_a": "chunk-85",
+        "chunk_id_b": "chunk-72",
+        "explanation": "Direct numerical contradiction on 'model accuracy': chunk 'chunk-85' reports '85%', whereas chunk 'chunk-72' reports '72%'.",
+        "query": "What is the accuracy?",
+        "timestamp": "2026-09-10T21:32:49.371627"
+      }
+    ]
+  },
+  "api-doc-41f8bc": {
+    "contradictions": [
+      {
+        "contradiction": true,
+        "chunk_a": "c1",
+        "chunk_b": "c2",
+        "reason": "Test conflict",
+        "severity": "high",
+        "timestamp": "2026-09-10T21:32:49.379834"
+      }
+    ]
+  },
+  "5f3f4531-eb0d-4640-8e17-821350397385": {
+    "document_id": "5f3f4531-eb0d-4640-8e17-821350397385",
+    "filename": "paper_a.txt",
+    "file_type": "txt",
+    "upload_date": "2026-09-10T21:32:49.407770",
+    "chunks_count": 1
+  },
+  "42e6f84e-85be-4519-96bc-4341f1f40c81": {
+    "document_id": "42e6f84e-85be-4519-96bc-4341f1f40c81",
+    "filename": "paper_b.txt",
+    "file_type": "txt",
+    "upload_date": "2026-09-10T21:32:49.413604",
+    "chunks_count": 1
+  },
+  "cad5c7e6-9414-4389-aa4d-c206147cadbd": {
+    "document_id": "cad5c7e6-9414-4389-aa4d-c206147cadbd",
+    "filename": "../../../../evil_payload.txt",
+    "file_type": "txt",
+    "upload_date": "2026-09-10T21:33:06.048261",
+    "chunks_count": 1
+  },
+  "doc-test-bafed346": {
+    "contradictions": [
+      {
+        "contradiction": true,
+        "chunk_a": "chunk-85",
+        "chunk_b": "chunk-72",
+        "reason": "Direct numerical contradiction on 'model accuracy': chunk 'chunk-85' reports '85%', whereas chunk 'chunk-72' reports '72%'.",
+        "severity": "high",
+        "claim_a": "model accuracy is 85%",
+        "claim_b": "model accuracy is 72%",
+        "chunk_id_a": "chunk-85",
+        "chunk_id_b": "chunk-72",
+        "explanation": "Direct numerical contradiction on 'model accuracy': chunk 'chunk-85' reports '85%', whereas chunk 'chunk-72' reports '72%'.",
+        "query": "What is the accuracy?",
+        "timestamp": "2026-09-10T21:49:58.054712"
+      }
+    ]
+  },
+  "api-doc-d47369": {
+    "contradictions": [
+      {
+        "contradiction": true,
+        "chunk_a": "c1",
+        "chunk_b": "c2",
+        "reason": "Test conflict",
+        "severity": "high",
+        "timestamp": "2026-09-10T21:49:58.062761"
+      }
+    ]
+  },
+  "9cfd68e7-610a-46d1-a2c5-6aa47ce0ffdb": {
+    "document_id": "9cfd68e7-610a-46d1-a2c5-6aa47ce0ffdb",
+    "filename": "paper_a.txt",
+    "file_type": "txt",
+    "upload_date": "2026-09-10T21:49:58.090299",
+    "chunks_count": 1
+  },
+  "e48da111-95f3-41f8-8867-5403162bc306": {
+    "document_id": "e48da111-95f3-41f8-8867-5403162bc306",
+    "filename": "paper_b.txt",
+    "file_type": "txt",
+    "upload_date": "2026-09-10T21:49:58.097077",
+    "chunks_count": 1
+  },
+  "b109c95f-5ca1-4ac1-90ab-18b30407f7ea": {
+    "document_id": "b109c95f-5ca1-4ac1-90ab-18b30407f7ea",
+    "filename": "../../../../evil_payload.txt",
+    "file_type": "txt",
+    "upload_date": "2026-09-10T21:50:35.656778",
+    "chunks_count": 1
+  },
+  "e59f1db7-8c2f-41d2-8605-dc8757597621": {
+    "document_id": "e59f1db7-8c2f-41d2-8605-dc8757597621",
+    "filename": "../../../../evil_payload.txt",
+    "file_type": "txt",
+    "upload_date": "2026-09-10T21:51:10.598866",
+    "chunks_count": 1
+  },
+  "f9995eef-fb5f-413b-afe1-45773658fe4a": {
+    "document_id": "f9995eef-fb5f-413b-afe1-45773658fe4a",
+    "filename": "paper_a.txt",
+    "file_type": "txt",
+    "upload_date": "2026-09-10T21:51:16.477891",
+    "chunks_count": 1
+  },
+  "3fc4b174-a144-4d0d-b34b-5e8e198065ba": {
+    "document_id": "3fc4b174-a144-4d0d-b34b-5e8e198065ba",
+    "filename": "paper_b.txt",
+    "file_type": "txt",
+    "upload_date": "2026-09-10T21:51:16.484584",
+    "chunks_count": 1
+  },
+  "37523bea-5cc6-499b-9c6f-0ae4c8121032": {
+    "document_id": "37523bea-5cc6-499b-9c6f-0ae4c8121032",
+    "filename": "../../../../evil_payload.txt",
+    "file_type": "txt",
+    "upload_date": "2026-09-10T21:51:36.691691",
+    "chunks_count": 1
+  },
+  "a785c811-b8d6-4e2f-ab09-ebd35a691f6d": {
+    "document_id": "a785c811-b8d6-4e2f-ab09-ebd35a691f6d",
+    "filename": "../../../../evil_payload.txt",
+    "file_type": "txt",
+    "upload_date": "2026-09-10T21:51:59.142998",
+    "chunks_count": 1
+  },
+  "api-doc-f4b4ad": {
+    "contradictions": [
+      {
+        "contradiction": true,
+        "chunk_a": "c1",
+        "chunk_b": "c2",
+        "reason": "Test conflict",
+        "severity": "high",
+        "timestamp": "2026-09-10T21:52:52.867439"
+      }
+    ]
+  },
+  "doc-test-17a9f8a1": {
+    "contradictions": [
+      {
+        "contradiction": true,
+        "chunk_a": "chunk-85",
+        "chunk_b": "chunk-72",
+        "reason": "Direct numerical contradiction on 'model accuracy': chunk 'chunk-85' reports '85%', whereas chunk 'chunk-72' reports '72%'.",
+        "severity": "high",
+        "claim_a": "model accuracy is 85%",
+        "claim_b": "model accuracy is 72%",
+        "chunk_id_a": "chunk-85",
+        "chunk_id_b": "chunk-72",
+        "explanation": "Direct numerical contradiction on 'model accuracy': chunk 'chunk-85' reports '85%', whereas chunk 'chunk-72' reports '72%'.",
+        "query": "What is the accuracy?",
+        "timestamp": "2026-09-10T21:53:00.332045"
+      }
+    ]
+  },
+  "api-doc-6f8959": {
+    "contradictions": [
+      {
+        "contradiction": true,
+        "chunk_a": "c1",
+        "chunk_b": "c2",
+        "reason": "Test conflict",
+        "severity": "high",
+        "timestamp": "2026-09-10T21:53:00.347778"
+      }
+    ]
+  },
+  "doc-test-75b4c0e9": {
+    "contradictions": [
+      {
+        "contradiction": true,
+        "chunk_a": "chunk-85",
+        "chunk_b": "chunk-72",
+        "reason": "Direct numerical contradiction on 'model accuracy': chunk 'chunk-85' reports '85%', whereas chunk 'chunk-72' reports '72%'.",
+        "severity": "high",
+        "claim_a": "model accuracy is 85%",
+        "claim_b": "model accuracy is 72%",
+        "chunk_id_a": "chunk-85",
+        "chunk_id_b": "chunk-72",
+        "explanation": "Direct numerical contradiction on 'model accuracy': chunk 'chunk-85' reports '85%', whereas chunk 'chunk-72' reports '72%'.",
+        "query": "What is the accuracy?",
+        "timestamp": "2026-09-10T21:54:31.591885"
+      }
+    ]
+  },
+  "api-doc-ea1e31": {
+    "contradictions": [
+      {
+        "contradiction": true,
+        "chunk_a": "c1",
+        "chunk_b": "c2",
+        "reason": "Test conflict",
+        "severity": "high",
+        "timestamp": "2026-09-10T21:54:31.601570"
+      }
+    ]
+  },
+  "86d5f96d-09bd-43c9-a489-f19cc4c46900": {
+    "document_id": "86d5f96d-09bd-43c9-a489-f19cc4c46900",
+    "filename": "paper_a.txt",
+    "file_type": "txt",
+    "upload_date": "2026-09-10T21:54:31.631612",
+    "chunks_count": 1
+  },
+  "c2681224-3fcb-45a3-be77-ddba60a04b09": {
+    "document_id": "c2681224-3fcb-45a3-be77-ddba60a04b09",
+    "filename": "paper_b.txt",
+    "file_type": "txt",
+    "upload_date": "2026-09-10T21:54:31.638295",
+    "chunks_count": 1
+  },
+  "ba728a66-3432-40cf-8072-0b4201843704": {
+    "document_id": "ba728a66-3432-40cf-8072-0b4201843704",
+    "filename": "../../../../evil_payload.txt",
+    "file_type": "txt",
+    "upload_date": "2026-09-10T21:54:46.131729",
+    "chunks_count": 1
+  },
+  "doc-test-780858b2": {
+    "contradictions": [
+      {
+        "contradiction": true,
+        "chunk_a": "chunk-85",
+        "chunk_b": "chunk-72",
+        "reason": "Direct numerical contradiction on 'model accuracy': chunk 'chunk-85' reports '85%', whereas chunk 'chunk-72' reports '72%'.",
+        "severity": "high",
+        "claim_a": "model accuracy is 85%",
+        "claim_b": "model accuracy is 72%",
+        "chunk_id_a": "chunk-85",
+        "chunk_id_b": "chunk-72",
+        "explanation": "Direct numerical contradiction on 'model accuracy': chunk 'chunk-85' reports '85%', whereas chunk 'chunk-72' reports '72%'.",
+        "query": "What is the accuracy?",
+        "timestamp": "2026-09-10T21:55:20.792558"
+      }
+    ]
+  },
+  "api-doc-ddffc5": {
+    "contradictions": [
+      {
+        "contradiction": true,
+        "chunk_a": "c1",
+        "chunk_b": "c2",
+        "reason": "Test conflict",
+        "severity": "high",
+        "timestamp": "2026-09-10T21:55:20.800477"
+      }
+    ]
+  },
+  "56a9d7cc-2c3b-4227-b94c-c27f26f1383c": {
+    "document_id": "56a9d7cc-2c3b-4227-b94c-c27f26f1383c",
+    "filename": "paper_a.txt",
+    "file_type": "txt",
+    "upload_date": "2026-09-10T21:55:20.829509",
+    "chunks_count": 1
+  },
+  "c4aafd36-17b1-404c-9c2b-f7871f1535e6": {
+    "document_id": "c4aafd36-17b1-404c-9c2b-f7871f1535e6",
+    "filename": "paper_b.txt",
+    "file_type": "txt",
+    "upload_date": "2026-09-10T21:55:20.836248",
+    "chunks_count": 1
+  },
+  "3e2ff2be-8371-4c8c-b7c2-b78ed976d879": {
+    "document_id": "3e2ff2be-8371-4c8c-b7c2-b78ed976d879",
+    "filename": "../../../../evil_payload.txt",
+    "file_type": "txt",
+    "upload_date": "2026-09-10T21:55:35.401592",
+    "chunks_count": 1
+  },
+  "doc-test-c734809d": {
+    "contradictions": [
+      {
+        "contradiction": true,
+        "chunk_a": "chunk-85",
+        "chunk_b": "chunk-72",
+        "reason": "Direct numerical contradiction on 'model accuracy': chunk 'chunk-85' reports '85%', whereas chunk 'chunk-72' reports '72%'.",
+        "severity": "high",
+        "claim_a": "model accuracy is 85%",
+        "claim_b": "model accuracy is 72%",
+        "chunk_id_a": "chunk-85",
+        "chunk_id_b": "chunk-72",
+        "explanation": "Direct numerical contradiction on 'model accuracy': chunk 'chunk-85' reports '85%', whereas chunk 'chunk-72' reports '72%'.",
+        "query": "What is the accuracy?",
+        "timestamp": "2026-09-10T22:05:07.064479"
+      }
+    ]
+  },
+  "api-doc-562a19": {
+    "contradictions": [
+      {
+        "contradiction": true,
+        "chunk_a": "c1",
+        "chunk_b": "c2",
+        "reason": "Test conflict",
+        "severity": "high",
+        "timestamp": "2026-09-10T22:05:07.074080"
+      }
+    ]
+  },
+  "bbd5a84e-0474-4fe1-8d8d-04c466b39d5e": {
+    "document_id": "bbd5a84e-0474-4fe1-8d8d-04c466b39d5e",
+    "filename": "paper_a.txt",
+    "file_type": "txt",
+    "upload_date": "2026-09-10T22:05:07.108323",
+    "chunks_count": 1
+  },
+  "5291b806-12b3-4b29-9f10-58d80163bfef": {
+    "document_id": "5291b806-12b3-4b29-9f10-58d80163bfef",
+    "filename": "paper_b.txt",
+    "file_type": "txt",
+    "upload_date": "2026-09-10T22:05:07.111646",
+    "chunks_count": 1
+  },
+  "2794214e-63ce-424d-b0de-41f1d96bfb99": {
+    "document_id": "2794214e-63ce-424d-b0de-41f1d96bfb99",
+    "filename": "../../../../evil_payload.txt",
+    "file_type": "txt",
+    "upload_date": "2026-09-10T22:05:29.565314",
+    "chunks_count": 1
+  },
+  "doc-test-4ccb2e9a": {
+    "contradictions": [
+      {
+        "contradiction": true,
+        "chunk_a": "chunk-85",
+        "chunk_b": "chunk-72",
+        "reason": "Direct numerical contradiction on 'model accuracy': chunk 'chunk-85' reports '85%', whereas chunk 'chunk-72' reports '72%'.",
+        "severity": "high",
+        "claim_a": "model accuracy is 85%",
+        "claim_b": "model accuracy is 72%",
+        "chunk_id_a": "chunk-85",
+        "chunk_id_b": "chunk-72",
+        "explanation": "Direct numerical contradiction on 'model accuracy': chunk 'chunk-85' reports '85%', whereas chunk 'chunk-72' reports '72%'.",
+        "query": "What is the accuracy?",
+        "timestamp": "2026-09-10T22:12:54.496239"
+      }
+    ]
+  },
+  "api-doc-c64f8a": {
+    "contradictions": [
+      {
+        "contradiction": true,
+        "chunk_a": "c1",
+        "chunk_b": "c2",
+        "reason": "Test conflict",
+        "severity": "high",
+        "timestamp": "2026-09-10T22:12:54.506656"
+      }
+    ]
+  },
+  "be064e5a-dc48-41dc-b0bb-01e7cf14a3e6": {
+    "document_id": "be064e5a-dc48-41dc-b0bb-01e7cf14a3e6",
+    "filename": "paper_a.txt",
+    "file_type": "txt",
+    "upload_date": "2026-09-10T22:12:54.604369",
+    "chunks_count": 1
+  },
+  "8898104f-f9bb-4116-88cf-4c96077346f6": {
+    "document_id": "8898104f-f9bb-4116-88cf-4c96077346f6",
+    "filename": "paper_b.txt",
+    "file_type": "txt",
+    "upload_date": "2026-09-10T22:12:54.613331",
+    "chunks_count": 1
+  },
+  "ce1968ec-186b-4696-b353-7af79a05ae18": {
+    "document_id": "ce1968ec-186b-4696-b353-7af79a05ae18",
+    "filename": "../../../../evil_payload.txt",
+    "file_type": "txt",
+    "upload_date": "2026-09-10T22:13:12.197392",
+    "chunks_count": 1
+  },
+  "doc-test-31ef13b4": {
+    "contradictions": [
+      {
+        "contradiction": true,
+        "chunk_a": "chunk-85",
+        "chunk_b": "chunk-72",
+        "reason": "Direct numerical contradiction on 'model accuracy': chunk 'chunk-85' reports '85%', whereas chunk 'chunk-72' reports '72%'.",
+        "severity": "high",
+        "claim_a": "model accuracy is 85%",
+        "claim_b": "model accuracy is 72%",
+        "chunk_id_a": "chunk-85",
+        "chunk_id_b": "chunk-72",
+        "explanation": "Direct numerical contradiction on 'model accuracy': chunk 'chunk-85' reports '85%', whereas chunk 'chunk-72' reports '72%'.",
+        "query": "What is the accuracy?",
+        "timestamp": "2026-09-10T22:13:52.242312"
+      }
+    ]
+  },
+  "api-doc-fd2be2": {
+    "contradictions": [
+      {
+        "contradiction": true,
+        "chunk_a": "c1",
+        "chunk_b": "c2",
+        "reason": "Test conflict",
+        "severity": "high",
+        "timestamp": "2026-09-10T22:13:52.281922"
+      }
+    ]
+  },
+  "d7d35ab0-3c2f-4fde-a86d-02871d4133f2": {
+    "document_id": "d7d35ab0-3c2f-4fde-a86d-02871d4133f2",
+    "filename": "paper_a.txt",
+    "file_type": "txt",
+    "upload_date": "2026-09-10T22:13:52.426529",
+    "chunks_count": 1
+  },
+  "e1875f00-36a8-4c03-a4d8-64301bba8824": {
+    "document_id": "e1875f00-36a8-4c03-a4d8-64301bba8824",
+    "filename": "paper_b.txt",
+    "file_type": "txt",
+    "upload_date": "2026-09-10T22:13:52.462685",
+    "chunks_count": 1
+  },
+  "1ca90402-3a50-4278-963a-752d74cc0515": {
+    "document_id": "1ca90402-3a50-4278-963a-752d74cc0515",
+    "filename": "../../../../evil_payload.txt",
+    "file_type": "txt",
+    "upload_date": "2026-09-10T22:14:08.144336",
+    "chunks_count": 1
+  },
+  "doc-test-bd3c5a6e": {
+    "contradictions": [
+      {
+        "contradiction": true,
+        "chunk_a": "chunk-85",
+        "chunk_b": "chunk-72",
+        "reason": "Direct numerical contradiction on 'model accuracy': chunk 'chunk-85' reports '85%', whereas chunk 'chunk-72' reports '72%'.",
+        "severity": "high",
+        "claim_a": "model accuracy is 85%",
+        "claim_b": "model accuracy is 72%",
+        "chunk_id_a": "chunk-85",
+        "chunk_id_b": "chunk-72",
+        "explanation": "Direct numerical contradiction on 'model accuracy': chunk 'chunk-85' reports '85%', whereas chunk 'chunk-72' reports '72%'.",
+        "query": "What is the accuracy?",
+        "timestamp": "2026-09-17T13:27:04.310202"
+      }
+    ]
+  },
+  "api-doc-e4c0c8": {
+    "contradictions": [
+      {
+        "contradiction": true,
+        "chunk_a": "c1",
+        "chunk_b": "c2",
+        "reason": "Test conflict",
+        "severity": "high",
+        "timestamp": "2026-09-17T13:27:04.319863"
+      }
+    ]
+  },
+  "85829905-28f6-4483-a7b6-51928d925cc3": {
+    "document_id": "85829905-28f6-4483-a7b6-51928d925cc3",
+    "filename": "paper_a.txt",
+    "file_type": "txt",
+    "upload_date": "2026-09-17T13:27:04.356265",
+    "chunks_count": 1
+  },
+  "63d0ae68-847c-4625-ae87-b99279c0ed9f": {
+    "document_id": "63d0ae68-847c-4625-ae87-b99279c0ed9f",
+    "filename": "paper_b.txt",
+    "file_type": "txt",
+    "upload_date": "2026-09-17T13:27:04.363659",
+    "chunks_count": 1
+  },
+  "516f6fb4-9a8f-4ea6-99c4-b097cc45f8e3": {
+    "document_id": "516f6fb4-9a8f-4ea6-99c4-b097cc45f8e3",
+    "filename": "../../../../evil_payload.txt",
+    "file_type": "txt",
+    "upload_date": "2026-09-17T13:27:18.215967",
+    "chunks_count": 1
+  },
+  "doc-test-0a5d0ba7": {
+    "contradictions": [
+      {
+        "contradiction": true,
+        "chunk_a": "chunk-85",
+        "chunk_b": "chunk-72",
+        "reason": "Direct numerical contradiction on 'model accuracy': chunk 'chunk-85' reports '85%', whereas chunk 'chunk-72' reports '72%'.",
+        "severity": "high",
+        "claim_a": "model accuracy is 85%",
+        "claim_b": "model accuracy is 72%",
+        "chunk_id_a": "chunk-85",
+        "chunk_id_b": "chunk-72",
+        "explanation": "Direct numerical contradiction on 'model accuracy': chunk 'chunk-85' reports '85%', whereas chunk 'chunk-72' reports '72%'.",
+        "query": "What is the accuracy?",
+        "timestamp": "2026-09-17T15:29:36.968547"
+      }
+    ]
+  },
+  "api-doc-c875c2": {
+    "contradictions": [
+      {
+        "contradiction": true,
+        "chunk_a": "c1",
+        "chunk_b": "c2",
+        "reason": "Test conflict",
+        "severity": "high",
+        "timestamp": "2026-09-17T15:29:36.977794"
+      }
+    ]
+  },
+  "b8ba6f8e-d0cf-4c1b-9864-bdfe392348b4": {
+    "document_id": "b8ba6f8e-d0cf-4c1b-9864-bdfe392348b4",
+    "filename": "paper_a.txt",
+    "file_type": "txt",
+    "upload_date": "2026-09-17T15:29:37.045447",
+    "chunks_count": 1
+  },
+  "ea8633d5-2766-4522-9cff-0279b4390e5a": {
+    "document_id": "ea8633d5-2766-4522-9cff-0279b4390e5a",
+    "filename": "paper_b.txt",
+    "file_type": "txt",
+    "upload_date": "2026-09-17T15:29:37.056874",
+    "chunks_count": 1
+  },
+  "11ca369c-4126-4a8f-aec5-a14770a2c80b": {
+    "document_id": "11ca369c-4126-4a8f-aec5-a14770a2c80b",
+    "filename": "../../../../evil_payload.txt",
+    "file_type": "txt",
+    "upload_date": "2026-09-17T15:29:53.830857",
+    "chunks_count": 1
+  },
+  "ca84e587-9f08-4fe3-97f3-e55e985d019b": {
+    "document_id": "ca84e587-9f08-4fe3-97f3-e55e985d019b",
+    "filename": "Amazon+Leadership+Principles (1).pdf",
+    "file_type": "pdf",
+    "upload_date": "2026-09-17T16:56:16.463589",
+    "chunks_count": 6
+  }
+}

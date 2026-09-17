@@ -1,21 +1,22 @@
+"""Split extracted document pages into retrieval-ready chunks."""
+
+from __future__ import annotations
+
 from dataclasses import dataclass
-from typing import List
+import re
 
 from app.ingestion.loaders import ExtractedDocument
 
-
-# Reasonable starting values for semantic retrieval.
-# These can be tuned later using retrieval evaluation.
-CHUNK_SIZE = 1000
-CHUNK_OVERLAP = 200
+DEFAULT_CHUNK_SIZE = 1000
+DEFAULT_CHUNK_OVERLAP = 200
 
 
-@dataclass
-class DocumentChunk:
-    """
-    Structured representation of a retrieval chunk.
-    """
+class ChunkingError(ValueError):
+    """Raised when extracted content cannot be chunked safely."""
 
+
+@dataclass(frozen=True)
+class Chunk:
     document_id: str
     chunk_id: str
     filename: str
@@ -23,122 +24,97 @@ class DocumentChunk:
     text: str
     source: str
 
+    @property
+    def char_count(self) -> int:
+        return len(self.text)
 
-def _split_text(
+    @property
+    def word_count(self) -> int:
+        return len(re.findall(r"\S+", self.text))
+
+
+DocumentChunk = Chunk
+
+
+def _find_boundary(text: str, start: int, end: int) -> int:
+    boundaries = ("\n\n", ". ", "? ", "! ", " ")
+    candidates = [text.rfind(boundary, start, end) for boundary in boundaries]
+    boundary = max(candidates)
+    if boundary <= start:
+        return end
+    return boundary + (2 if text[boundary : boundary + 2] in {"\n\n", ". ", "? ", "! "} else 1)
+
+
+def split_text(
     text: str,
-    chunk_size: int = CHUNK_SIZE,
-    chunk_overlap: int = CHUNK_OVERLAP,
-) -> List[str]:
-    """
-    Split text into overlapping character-based chunks.
-
-    The splitter tries to break at natural boundaries such as
-    paragraphs, sentences, or whitespace instead of cutting
-    words in half.
-    """
-
+    chunk_size: int = DEFAULT_CHUNK_SIZE,
+    chunk_overlap: int = DEFAULT_CHUNK_OVERLAP,
+) -> list[str]:
+    """Split text into naturally bounded, character-sized overlapping chunks."""
     if chunk_size <= 0:
-        raise ValueError("chunk_size must be greater than 0.")
-
+        raise ChunkingError("chunk_size must be greater than 0.")
     if chunk_overlap < 0:
-        raise ValueError("chunk_overlap cannot be negative.")
-
+        raise ChunkingError("chunk_overlap cannot be negative.")
     if chunk_overlap >= chunk_size:
-        raise ValueError(
-            "chunk_overlap must be smaller than chunk_size."
-        )
+        raise ChunkingError("chunk_overlap must be smaller than chunk_size.")
 
-    text = text.strip()
-
-    if not text:
+    normalized = text.strip()
+    if not normalized:
         return []
 
-    chunks: List[str] = []
-
+    chunks: list[str] = []
     start = 0
-    text_length = len(text)
-
-    while start < text_length:
-        end = min(start + chunk_size, text_length)
-
-        if end < text_length:
-            boundary = text.rfind("\n\n", start, end)
-
-            if boundary <= start:
-                boundary = text.rfind(". ", start, end)
-
-            if boundary <= start:
-                boundary = text.rfind(" ", start, end)
-
-            if boundary > start:
-                end = boundary + 1
-
-        chunk = text[start:end].strip()
-
+    while start < len(normalized):
+        proposed_end = min(start + chunk_size, len(normalized))
+        end = proposed_end if proposed_end == len(normalized) else _find_boundary(
+            normalized, start, proposed_end
+        )
+        chunk = normalized[start:end].strip()
         if chunk:
             chunks.append(chunk)
-
-        if end >= text_length:
+        if end >= len(normalized):
             break
-
-        next_start = end - chunk_overlap
-
-        if next_start <= start:
-            next_start = end
-
-        start = next_start
+        start = max(end - chunk_overlap, start + 1)
 
     return chunks
 
 
-def chunk_documents(
-    extracted_documents: List[ExtractedDocument],
-    chunk_size: int = CHUNK_SIZE,
-    chunk_overlap: int = CHUNK_OVERLAP,
-) -> List[DocumentChunk]:
-    """
-    Convert extracted document content into structured chunks.
+def chunk_document(
+    document: ExtractedDocument,
+    chunk_size: int = DEFAULT_CHUNK_SIZE,
+    chunk_overlap: int = DEFAULT_CHUNK_OVERLAP,
+) -> list[Chunk]:
+    """Chunk one extracted document while preserving page and document metadata."""
+    document_ids = {page.document_id for page in document.pages}
+    if document.document_id not in document_ids:
+        raise ChunkingError("Every page must retain the document's document_id.")
+    if len(document_ids) > 1:
+        raise ChunkingError("Extracted document pages must not be mixed.")
 
-    Each extracted document is processed independently.
-
-    Chunks from different documents are never mixed.
-    Every chunk retains the original document_id.
-    """
-
-    chunks: List[DocumentChunk] = []
-
-    for extracted in extracted_documents:
-
-        text_chunks = _split_text(
-            text=extracted.text,
-            chunk_size=chunk_size,
-            chunk_overlap=chunk_overlap,
-        )
-
-        for index, chunk_text in enumerate(
-            text_chunks,
-            start=1,
-        ):
-
-            chunk_id = (
-                f"{extracted.document_id}"
-                f"-chunk-{index:04d}"
-            )
-
-            source = (
-                f"{extracted.filename}"
-                f"#page={extracted.page}"
-            )
-
+    chunks: list[Chunk] = []
+    for page in document.pages:
+        for text in split_text(page.text, chunk_size, chunk_overlap):
+            chunk_index = len(chunks)
             chunks.append(
-                DocumentChunk(
-                    document_id=extracted.document_id,
-                    chunk_id=chunk_id,
-                    filename=extracted.filename,
-                    page_number=extracted.page,
-                    text=chunk_text,
-                    source=source,
+                Chunk(
+                    document_id=document.document_id,
+                    chunk_id=f"{document.document_id}::chunk-{chunk_index:04d}",
+                    filename=document.source_filename,
+                    page_number=page.page_number,
+                    text=text,
+                    source=f"{document.source_filename}#page={page.page_number}",
                 )
             )
+    return chunks
 
+
+def chunk_documents(
+    documents: list[ExtractedDocument],
+    chunk_size: int = DEFAULT_CHUNK_SIZE,
+    chunk_overlap: int = DEFAULT_CHUNK_OVERLAP,
+) -> list[Chunk]:
+    """Chunk multiple documents independently without sharing chunk state."""
+    chunks: list[Chunk] = []
+    for document in documents:
+        chunks.extend(chunk_document(document, chunk_size, chunk_overlap))
     return chunks

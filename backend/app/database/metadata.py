@@ -42,3 +42,40 @@ def save_document_metadata(document_id: str, metadata: Dict[str, Any]) -> None:
 def get_document_metadata(document_id: str) -> Dict[str, Any]:
     all_meta = load_all_metadata()
     return all_meta.get(document_id, {})
+
+def store_contradictions(document_id: str, contradictions: list[Dict[str, Any]], query: str = "") -> None:
+    """Persist detected contradictions for a document so they can later be viewed in Evidence Viewer."""
+    if not document_id or not contradictions:
+        return
+    all_meta = load_all_metadata()
+    doc_meta = all_meta.get(document_id, {})
+    existing = doc_meta.get("contradictions", [])
+    for c in contradictions:
+        entry = dict(c)
+        if query and "query" not in entry:
+            entry["query"] = query
+        entry["timestamp"] = datetime.utcnow().isoformat()
+        pair_key = (
+            str(entry.get("chunk_a") or entry.get("chunk_id_a") or ""),
+            str(entry.get("chunk_b") or entry.get("chunk_id_b") or ""),
+        )
+        is_dup = any(
+            (
+                str(e.get("chunk_a") or e.get("chunk_id_a") or ""),
+                str(e.get("chunk_b") or e.get("chunk_id_b") or ""),
+            ) == pair_key
+            for e in existing
+        )
+        if not is_dup:
+            existing.append(entry)
+    doc_meta["contradictions"] = existing
+    all_meta[document_id] = doc_meta
+    save_all_metadata(all_meta)
+
+def get_contradictions(document_id: str) -> list[Dict[str, Any]]:
+    """Retrieve persisted contradictions for a document."""
+    if not document_id:
+        return []
+    all_meta = load_all_metadata()
+    return all_meta.get(document_id, {}).get("contradictions", [])
+

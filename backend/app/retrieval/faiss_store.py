@@ -253,6 +253,9 @@ def compute_hybrid_score(query: str | None, text: str, dense_score: float) -> fl
 
 	- Exact phrase match: User query appears verbatim (e.g. section titles or headings).
 	- Content word overlap: Matches on non-stopwords with full or partial overlap.
+	- Definitional boost: Questions asking 'what is/are', 'explain', 'define' prioritize
+	  core explanatory sentences ('X is', 'X refers to', 'Core Idea', 'Overview') over
+	  troubleshooting or failure mode sections ('What Breaks It').
 	- Irrelevant text: Preserves dense score below relevance threshold (no false positives).
 	"""
 	if not query or not isinstance(query, str) or not query.strip():
@@ -266,11 +269,12 @@ def compute_hybrid_score(query: str | None, text: str, dense_score: float) -> fl
 		return float(dense_score)
 
 	d_score = float(dense_score)
+	score = d_score
 
 	# 1. Exact phrase match: The normalized query appears verbatim in the chunk text
 	if len(norm_q) >= 3 and norm_q in norm_t:
 		phrase_score = 0.75 + 0.20 * max(0.0, d_score)
-		return round(max(d_score, phrase_score), 4)
+		score = max(score, phrase_score)
 
 	# 2. Key content word overlap (excluding common English stopwords)
 	q_words = [w for w in re.findall(r"\b\w+\b", norm_q) if len(w) > 1]
@@ -283,7 +287,7 @@ def compute_hybrid_score(query: str | None, text: str, dense_score: float) -> fl
 		"any", "both", "each", "few", "more", "most", "other", "some", "such",
 		"no", "nor", "not", "only", "own", "same", "so", "than", "too", "very",
 		"s", "t", "can", "will", "just", "don", "should", "now", "it", "its",
-		"do", "does", "did"
+		"do", "does", "did", "what", "which",
 	}
 	content_words = [w for w in q_words if w not in stop_words]
 	if not content_words:
@@ -294,11 +298,35 @@ def compute_hybrid_score(query: str | None, text: str, dense_score: float) -> fl
 		ratio = matches / len(content_words)
 		if ratio == 1.0 and len(content_words) >= 2:
 			overlap_score = 0.65 + 0.20 * max(0.0, d_score)
-			return round(max(d_score, overlap_score), 4)
+			score = max(score, overlap_score)
 		elif ratio >= 0.5 and len(content_words) >= 2:
 			combined = 0.50 * d_score + 0.35 * ratio
-			return round(max(d_score, combined), 4)
+			score = max(score, combined)
 
-	return d_score
+		# 3. Definitional query boost
+		is_definitional_query = bool(
+			re.search(r"\b(what\s+is|what\s+are|define|explain|meaning\s+of|overview\s+of)\b", norm_q)
+		)
+		if is_definitional_query and len(content_words) >= 1:
+			core_term = " ".join(content_words)
+			# Look for definitional constructs in text: 'term is', 'term are', 'core idea', 'definition'
+			has_definitional_phrase = bool(
+				re.search(r"\b" + re.escape(core_term) + r"\s+(is|are|refers\s+to|means|fundamentally)\b", norm_t)
+			)
+			has_intro_heading = bool(
+				re.search(r"\b(core\s+idea|overview|definition|first\s+principles|introduction)\b", norm_t)
+			)
+			if has_definitional_phrase or has_intro_heading:
+				score += 0.15
+
+			# Penalize troubleshooting/failure chunks when asking for definition
+			is_troubleshooting_chunk = bool(
+				re.search(r"\b(what\s+breaks\s+it|edge\s+cases|pitfalls|common\s+mistakes|disadvantages|limitations)\b", norm_t)
+			)
+			if is_troubleshooting_chunk and not re.search(r"\b(break|fail|edge|limit|disadvantage|mistake)\b", norm_q):
+				score -= 0.12
+
+	return round(min(1.0, max(0.0, score)), 4)
+
 
 

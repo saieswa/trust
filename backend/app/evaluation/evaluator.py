@@ -547,22 +547,50 @@ def run_comparative_evaluation(
     ]
 
     # University Report Table 2: Category Breakdown Table
-    category_table = [
-        {
-            "category": info["label"],
+    # Group case_evaluations by their category key for per-category metric aggregation.
+    _cat_cases: dict[str, list[dict]] = {}
+    for ce in case_evaluations:
+        _cat_cases.setdefault(ce["category"], []).append(ce)
+
+    def _mean(vals: list) -> float:
+        return round(sum(vals) / len(vals), 3) if vals else 0.0
+
+    category_table = []
+    for info in categories_map.values():
+        cat_key = info["category"]
+        cat_label = info["label"]
+        cases_in_cat = _cat_cases.get(cat_key, [])
+
+        base_halluc = _mean([ce["baseline"]["hallucination_rate"] for ce in cases_in_cat])
+        ta_halluc   = _mean([ce["trust_aware"]["hallucination_rate"] for ce in cases_in_cat])
+        ta_abstain  = (
+            round(sum(1 for ce in cases_in_cat if ce["trust_aware"]["abstained"]) / len(cases_in_cat), 3)
+            if cases_in_cat else 0.0
+        )
+        base_lat = round(_mean([ce["baseline"]["latency_ms"] for ce in cases_in_cat]), 1)
+        ta_lat   = round(_mean([ce["trust_aware"]["latency_ms"] for ce in cases_in_cat]), 1)
+
+        category_table.append({
+            "category": cat_label,
             "test_cases": info["count"],
+            # Quantitative per-category metrics — fed into the Stress Categories Matrix table
+            "cases_count": info["count"],
+            "baseline_hallucination_rate": round(base_halluc * 100, 1),
+            "trust_hallucination_rate": round(ta_halluc * 100, 1),
+            "trust_abstention_rate": round(ta_abstain * 100, 1),
+            "baseline_latency_ms": base_lat,
+            "trust_latency_ms": ta_lat,
+            # Qualitative descriptions for the 9-point comparison section
             "baseline_behavior": "Fabricates answer / Fails on contradiction" if info["baseline_failures"] > 0 else "Answers from evidence",
             "trust_aware_behavior": "Grounded answer / Abstains with explanation",
             "baseline_failure_mode": (
-                "Hallucination from weights" if "Not Answerable" in info["label"]
-                else "Accepts false premise" if "Hallucination" in info["label"]
-                else "Conflates contradictory facts" if "Conflicting" in info["label"]
-                else "Uncertainty assumption" if "Ambiguous" in info["label"]
+                "Hallucination from weights" if "Not Answerable" in cat_label
+                else "Accepts false premise" if "Hallucination" in cat_label
+                else "Conflates contradictory facts" if "Conflicting" in cat_label
+                else "Uncertainty assumption" if "Ambiguous" in cat_label
                 else "None (Answers correctly)"
             ),
-        }
-        for info in categories_map.values()
-    ]
+        })
 
     nine_point_comp = generate_nine_point_comparison(summary_table=summary_table, case_evaluations=case_evaluations)
 
@@ -721,21 +749,48 @@ def generate_nine_point_comparison(
     }
 
 
+_REQUIRED_CATEGORY_FIELDS = {
+    "cases_count", "baseline_hallucination_rate", "trust_hallucination_rate",
+    "trust_abstention_rate", "baseline_latency_ms", "trust_latency_ms",
+}
+
+
+def _is_category_table_stale(data: dict[str, Any]) -> bool:
+    """Return True if category_table is missing the quantitative metric fields added in v2."""
+    rows = data.get("category_table", [])
+    if not rows:
+        return True
+    first_keys = set(rows[0].keys())
+    return not _REQUIRED_CATEGORY_FIELDS.issubset(first_keys)
+
+
 def load_stored_evaluation_results() -> dict[str, Any]:
-    """Load latest stored evaluation results or run live if not yet executed."""
+    """Load latest stored evaluation results, or re-run if the cache is missing or stale."""
     if os.path.exists(_EVAL_RESULTS_FILE):
         try:
             with open(_EVAL_RESULTS_FILE, "r", encoding="utf-8") as f:
                 data = json.load(f)
-                if "nine_point_comparison" not in data:
-                    data["nine_point_comparison"] = generate_nine_point_comparison(
-                        summary_table=data.get("summary_table"),
-                        case_evaluations=data.get("cases"),
-                    )
-                return data
-        except Exception:
-            pass
-    return run_comparative_evaluation()
+            # Backfill nine_point_comparison if absent (older format)
+            if "nine_point_comparison" not in data:
+                data["nine_point_comparison"] = generate_nine_point_comparison(
+                    summary_table=data.get("summary_table"),
+                    case_evaluations=data.get("cases"),
+                )
+            # Detect stale cache: category_table missing quantitative metric fields
+            if _is_category_table_stale(data):
+                logger.info(
+                    "Cached evaluation_results.json is stale (missing metric fields). "
+                    "Re-running comparative evaluation to regenerate."
+                )
+                try:
+                    os.remove(_EVAL_RESULTS_FILE)
+                except OSError:
+                    pass
+                return run_comparative_evaluation(persist=True)
+            return data
+        except Exception as exc:
+            logger.warning("Failed to load cached results (%s); re-running.", exc)
+    return run_comparative_evaluation(persist=True)
 
 
 def run_benchmark_evaluation(cases: list[dict[str, Any]] | None = None, use_mock_llm: bool = True) -> dict[str, Any]:

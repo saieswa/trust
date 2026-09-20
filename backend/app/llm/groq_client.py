@@ -46,9 +46,9 @@ logger = logging.getLogger(__name__)
 FALLBACK_ANSWER = "I don't have enough reliable evidence to answer this confidently."
 
 FALLBACK_MODELS = [
-	"groq/compound-mini",
-	"openai/gpt-oss-120b",
+	"qwen/qwen3.8-27b",
 	"openai/gpt-oss-20b",
+	"openai/gpt-oss-120b",
 ]
 
 
@@ -100,14 +100,19 @@ def _handle_rate_limit_pause(exc: Exception) -> None:
 	import time
 
 	msg = str(exc).lower()
+	if "tpd" in msg or "tokens per day" in msg:
+		raise GroqClientError(f"Groq daily token limit reached (TPD): {exc}") from exc
+
 	if "rate_limit" in msg or "429" in msg or "try again in" in msg:
 		match = re.search(r"try again in (\d+(?:\.\d+)?)(s|ms)", str(exc))
 		if match:
 			val, unit = float(match.group(1)), match.group(2)
-			sleep_s = (val / 1000.0 if unit == "ms" else val) + 0.1
-			time.sleep(min(sleep_s, 2.0))
+			sleep_s = (val / 1000.0 if unit == "ms" else val) + 0.5
+			if sleep_s > 8.0:
+				raise GroqClientError(f"Rate limit cooldown too long ({sleep_s:.1f}s): {exc}") from exc
+			time.sleep(min(sleep_s, 8.0))
 		else:
-			time.sleep(0.5)
+			time.sleep(1.0)
 
 
 class GroqLLMClient:
@@ -192,7 +197,7 @@ class GroqLLMClient:
 			f"RETRIEVED EVIDENCE ONLY:\n{json.dumps(evidence_records, ensure_ascii=False)}\n\n"
 			"Return the structured response using the required headings."
 		)
-		preferred_model = FALLBACK_MODELS[0] if (not self.model or self.model == "openai/gpt-oss-20b") else self.model
+		preferred_model = self.model or FALLBACK_MODELS[0]
 		models_to_try = [preferred_model] + [m for m in FALLBACK_MODELS if m != preferred_model]
 		last_exc = None
 		answer = None
@@ -214,7 +219,12 @@ class GroqLLMClient:
 				except Exception as exc:
 					last_exc = exc
 					logger.warning("Groq model %s attempt %d failed: %s", candidate_model, attempt + 1, exc)
-					_handle_rate_limit_pause(exc)
+					if "rate_limit" in str(exc).lower() or "429" in str(exc):
+						break
+					try:
+						_handle_rate_limit_pause(exc)
+					except Exception:
+						break
 			if answer:
 				break
 
@@ -234,14 +244,13 @@ class GroqLLMClient:
 		self,
 		messages: Sequence[Mapping[str, str]],
 		model: str | None = None,
-		max_tokens: int = 800,
+		max_tokens: int = 1024,
 	) -> dict[str, Any]:
 		"""Execute a chat completion with JSON mode and return the parsed JSON dictionary."""
 		import re
 
-		chosen = model or self.model
-		effective_model = FALLBACK_MODELS[0] if (not chosen or chosen == "openai/gpt-oss-20b") else chosen
-		models_to_try = [effective_model] + [m for m in FALLBACK_MODELS if m != effective_model]
+		chosen = model or self.model or FALLBACK_MODELS[0]
+		models_to_try = [chosen] + [m for m in FALLBACK_MODELS if m != chosen]
 		last_exc = None
 		for candidate_model in models_to_try:
 			for attempt in range(2):
@@ -251,7 +260,7 @@ class GroqLLMClient:
 						messages=list(messages),
 						response_format={"type": "json_object"},
 						temperature=0,
-						max_tokens=min(max_tokens, 1000),
+						max_tokens=max_tokens,
 					)
 					content = response.choices[0].message.content.strip()
 					if content.startswith("```"):
@@ -262,7 +271,12 @@ class GroqLLMClient:
 				except Exception as exc:
 					last_exc = exc
 					logger.warning("Groq JSON model %s attempt %d failed: %s", candidate_model, attempt + 1, exc)
-					_handle_rate_limit_pause(exc)
+					if "rate_limit" in str(exc).lower() or "429" in str(exc):
+						break
+					try:
+						_handle_rate_limit_pause(exc)
+					except Exception:
+						break
 
 		raise GroqClientError(
 			f"Groq JSON completion failed across all models: {type(last_exc).__name__}: {last_exc}"

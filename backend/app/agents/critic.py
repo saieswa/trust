@@ -361,8 +361,8 @@ class CriticAgent:
             try:
                 return self.llm_client.complete_json(messages, model=self.model)
             except Exception as exc:
-                logger.exception("Critic complete_json failed: %s", exc)
-                raise GroqClientError(f"Critic evaluation failed: {type(exc).__name__}") from exc
+                logger.warning("Critic complete_json failed (%s), using deterministic fallback", exc)
+                return self._evaluate_deterministic(question, valid_chunks)
 
         # Or invoke Groq client directly
         raw_client = getattr(self.llm_client, "client", self.llm_client)
@@ -378,12 +378,39 @@ class CriticAgent:
                 raw_content = response.choices[0].message.content.strip()
                 return _parse_json_response(raw_content)
             except Exception as exc:
-                logger.exception("Groq chat completion failed in Critic: %s", exc)
-                raise GroqClientError(f"Critic LLM evaluation failed: {type(exc).__name__}: {exc}") from exc
+                logger.warning("Groq chat completion failed in Critic (%s), using deterministic fallback", exc)
+                return self._evaluate_deterministic(question, valid_chunks)
 
         # Fallback if mock client doesn't support chat completions
         logger.warning("LLM client does not support chat completions; using fallback.")
-        return {"evaluations": [], "contradictions": []}
+        return self._evaluate_deterministic(question, valid_chunks)
+
+    def _evaluate_deterministic(self, question: str, chunks: Sequence[Mapping[str, Any]]) -> dict[str, Any]:
+        """Deterministic evaluation fallback when LLM is unavailable or rate limited."""
+        q_words = set(re.findall(r"\b\w{3,}\b", question.lower()))
+        evals = []
+        for c in chunks:
+            cid = str(c.get("chunk_id", ""))
+            text = str(c.get("text", ""))
+            src = str(c.get("source") or c.get("filename") or "")
+            c_words = set(re.findall(r"\b\w{3,}\b", text.lower()))
+            overlap = len(q_words & c_words) / max(1, len(q_words))
+            rel = (overlap >= 0.15) or (float(c.get("score", 0.0)) >= 0.30)
+            is_unverified = "unverified" in src.lower() or "forum" in src.lower()
+            evals.append({
+                "chunk_id": cid,
+                "relevance": rel,
+                "support_status": "supported" if rel else "unsupported",
+                "quality_assessment": {
+                    "evidence_strength": "high" if len(text) > 80 else "medium",
+                    "source_quality": "low" if is_unverified else "high",
+                    "potential_outdated": False,
+                    "details": "Deterministic fallback based on token overlap",
+                },
+                "contradiction_status": "none",
+                "explanation": "Deterministic fallback evaluation based on token overlap and metadata.",
+            })
+        return {"evaluations": evals, "contradictions": []}
 
 
 def _parse_json_response(raw_content: str) -> dict[str, Any]:

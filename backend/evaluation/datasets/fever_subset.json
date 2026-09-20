@@ -1,0 +1,142 @@
+[
+  {
+    "id": "fever_001",
+    "claim": "Nikolaj Coster-Waldau worked with the Fox Broadcasting Company.",
+    "label": "SUPPORTS",
+    "evidence_text": "Nikolaj William Coster-Waldau is a Danish actor. He appeared in the 2009 Fox television film 'Virtuality', produced by the Fox Broadcasting Company, before his role as Jaime Lannister in Game of Thrones.",
+    "evidence_source": "Wikipedia: Nikolaj Coster-Waldau"
+  },
+  {
+    "id": "fever_002",
+    "claim": "The Eiffel Tower is located in Berlin, Germany.",
+    "label": "REFUTES",
+    "evidence_text": "The Eiffel Tower is a wrought-iron lattice tower located on the Champ de Mars in Paris, France. It was designed by Gustave Eiffel's company and completed in 1889.",
+    "evidence_source": "Wikipedia: Eiffel Tower"
+  },
+  {
+    "id": "fever_003",
+    "claim": "Albert Einstein won the Nobel Prize in Physics in 1921.",
+    "label": "SUPPORTS",
+    "evidence_text": "Albert Einstein received the 1921 Nobel Prize in Physics 'for his services to Theoretical Physics, and especially for his discovery of the law of the photoelectric effect.'",
+    "evidence_source": "Wikipedia: Albert Einstein"
+  },
+  {
+    "id": "fever_004",
+    "claim": "The Great Wall of China is visible from the Moon with the naked eye.",
+    "label": "REFUTES",
+    "evidence_text": "Contrary to a popular myth, the Great Wall of China is not visible from the Moon with the naked eye. Astronauts have confirmed that no human-made structures are visible from that distance without aid.",
+    "evidence_source": "Wikipedia: Great Wall of China (myths)"
+  },
+  {
+    "id": "fever_005",
+    "claim": "Python was created by Guido van Rossum.",
+    "label": "SUPPORTS",
+    "evidence_text": "Python is a high-level programming language created by Guido van Rossum and first released in 1991.",
+    "evidence_source": "Wikipedia: Python (programming language)"
+  },
+  {
+    "id": "fever_006",
+    "claim": "Mount Everest is located entirely within India.",
+    "label": "REFUTES",
+    "evidence_text": "Mount Everest is located in the Mahalangur Himal sub-range of the Himalayas, straddling the border between Nepal and the Tibet Autonomous Region of China.",
+    "evidence_source": "Wikipedia: Mount Everest"
+  },
+  {
+    "id": "fever_007",
+    "claim": "William Shakespeare wrote the play Hamlet.",
+    "label": "SUPPORTS",
+    "evidence_text": "Hamlet is a tragedy written by William Shakespeare sometime between 1599 and 1601. It is considered among the most powerful and influential works of world literature.",
+    "evidence_source": "Wikipedia: Hamlet"
+  },
+  {
+    "id": "fever_008",
+    "claim": "The human body has six senses that are all equally understood by science.",
+    "label": "NOT ENOUGH INFO",
+    "evidence_text": "The number and classification of human senses is a subject of ongoing debate among researchers, with some proposing more than the traditional five and others contesting exact classifications.",
+    "evidence_source": "Wikipedia: Sense"
+  },
+  {
+    "id": "fever_009",
+    "claim": "The first successful powered flight was performed by the Wright brothers in 1903.",
+    "label": "SUPPORTS",
+    "evidence_text": "On December 17, 1903, the Wright brothers made the first successful sustained flights of a powered, heavier-than-air aircraft near Kitty Hawk, North Carolina.",
+    "evidence_source": "Wikipedia: Wright brothers"
+  },
+  {
+    "id": "fever_010",
+    "claim": "Antarctica is the largest continent on Earth by land area.",
+    "label": "REFUTES",
+    "evidence_text": "Asia is the largest continent on Earth by land area, at approximately 44.6 million square kilometers. Antarctica is the fifth-largest continent.",
+    "evidence_source": "Wikipedia: List of continents by area"
+  },
+  {
+    "id": "fever_011",
+    "claim": "The FIFA World Cup is held every four years.",
+    "label": "SUPPORTS",
+    "evidence_text": "The FIFA World Cup is an international association football competition contested by the senior men's national teams, held every four years since the first tournament in 1930.",
+    "evidence_source": "Wikipedia: FIFA World Cup"
+  },
+  {
+    "id": "fever_012",
+    "claim": "Marie Curie was the first person to win two Nobel Prizes in different sciences.",
+    "label": "SUPPORTS",
+    "evidence_text": "Marie Curie won the Nobel Prize in Physics in 1903 and the Nobel Prize in Chemistry in 1911, making her the first person to win Nobel Prizes in two different scientific fields.",
+    "evidence_source": "Wikipedia: Marie Curie"
+  },
+  {
+    "id": "fever_013",
+    "claim": "The Amazon rainforest produces the majority of the Earth's atmospheric oxygen.",
+    "label": "NOT ENOUGH INFO",
+    "evidence_text": "The Amazon rainforest is a major carbon sink and produces a significant amount of oxygen through photosynthesis, though the precise net contribution to atmospheric oxygen relative to global oceanic phytoplankton is debated among scientists.",
+    "evidence_source": "Wikipedia: Amazon rainforest"
+  },
+  {
+    "id": "fever_014",
+    "claim": "Napoleon Bonaparte was unusually short for his time, at under five feet tall.",
+    "label": "REFUTES",
+    "evidence_text": "Napoleon's height was recorded at his death as 5 feet 2 inches in French units, which converts to approximately 5 feet 7 inches in imperial units — around average height for a Frenchman of his era.",
+    "evidence_source": "Wikipedia: Napoleon (height controversy)"
+  },
+  {
+    "id": "fever_015",
+    "claim": "The Pacific Ocean is the largest and deepest ocean on Earth.",
+    "label": "SUPPORTS",
+    "evidence_text": "The Pacific Ocean is the largest and deepest of Earth's oceanic divisions, extending from the Arctic Ocean in the north to the Southern Ocean in the south.",
+    "evidence_source": "Wikipedia: Pacific Ocean"
+  },
+  {
+    "id": "fever_016",
+    "claim": "Vaccines cause autism in children.",
+    "label": "REFUTES",
+    "evidence_text": "Extensive scientific research, including large-scale epidemiological studies, has found no causal link between vaccines and autism. The original study suggesting a link was retracted due to fraud and ethical violations.",
+    "evidence_source": "Wikipedia: MMR vaccine and autism"
+  },
+  {
+    "id": "fever_017",
+    "claim": "The Berlin Wall fell in 1989.",
+    "label": "SUPPORTS",
+    "evidence_text": "The Berlin Wall fell on November 9, 1989, as a pivotal event in the collapse of communist rule in Eastern Europe.",
+    "evidence_source": "Wikipedia: Berlin Wall"
+  },
+  {
+    "id": "fever_018",
+    "claim": "Sharks are mammals.",
+    "label": "REFUTES",
+    "evidence_text": "Sharks are a group of elasmobranch fish, not mammals. They breathe through gills and do not nurse their young with milk.",
+    "evidence_source": "Wikipedia: Shark"
+  },
+  {
+    "id": "fever_019",
+    "claim": "The Statue of Liberty was a gift from France to the United States.",
+    "label": "SUPPORTS",
+    "evidence_text": "The Statue of Liberty was a gift from the people of France to the people of the United States, dedicated on October 28, 1886.",
+    "evidence_source": "Wikipedia: Statue of Liberty"
+  },
+  {
+    "id": "fever_020",
+    "claim": "Coffee was first cultivated in South America.",
+    "label": "NOT ENOUGH INFO",
+    "evidence_text": "The exact origins of coffee cultivation are debated, with strong historical evidence pointing to Ethiopia and later Yemen as early sites, though definitive first-cultivation records are incomplete.",
+    "evidence_source": "Wikipedia: History of coffee"
+  }
+]

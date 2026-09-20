@@ -1,0 +1,110 @@
+[
+  {
+    "id": "hotpot_001",
+    "question": "What nationality is the director of the film that the actor who played Jaime Lannister appeared in for Fox in 2009?",
+    "answer": "Danish",
+    "supporting_docs": [
+      {"title": "Nikolaj Coster-Waldau", "text": "Nikolaj Coster-Waldau is a Danish actor who played Jaime Lannister in Game of Thrones and appeared in the 2009 Fox television film Virtuality."},
+      {"title": "Virtuality (film)", "text": "Virtuality is a 2009 American television film that aired on Fox, starring Nikolaj Coster-Waldau."}
+    ]
+  },
+  {
+    "id": "hotpot_002",
+    "question": "Which country is home to both the Eiffel Tower and the Louvre Museum?",
+    "answer": "France",
+    "supporting_docs": [
+      {"title": "Eiffel Tower", "text": "The Eiffel Tower is located in Paris, France, on the Champ de Mars."},
+      {"title": "Louvre", "text": "The Louvre is the world's most-visited museum, located in Paris, France."}
+    ]
+  },
+  {
+    "id": "hotpot_003",
+    "question": "In what year did the scientist who discovered the photoelectric effect's theoretical explanation win his Nobel Prize?",
+    "answer": "1921",
+    "supporting_docs": [
+      {"title": "Albert Einstein", "text": "Albert Einstein developed the theoretical explanation of the photoelectric effect, for which he won the Nobel Prize in Physics in 1921."},
+      {"title": "Photoelectric effect", "text": "The photoelectric effect was explained theoretically by Albert Einstein in 1905, work later recognized by the Nobel committee."}
+    ]
+  },
+  {
+    "id": "hotpot_004",
+    "question": "What language was created by the person who first released it in 1991?",
+    "answer": "Python",
+    "supporting_docs": [
+      {"title": "Guido van Rossum", "text": "Guido van Rossum is a Dutch programmer who created the Python programming language, first releasing it in 1991."},
+      {"title": "Python (programming language)", "text": "Python is a high-level, general-purpose programming language first released in 1991."}
+    ]
+  },
+  {
+    "id": "hotpot_005",
+    "question": "Which mountain range contains the peak that straddles the border between Nepal and Tibet?",
+    "answer": "Himalayas",
+    "supporting_docs": [
+      {"title": "Mount Everest", "text": "Mount Everest straddles the border between Nepal and the Tibet Autonomous Region of China, and is part of the Mahalangur Himal sub-range of the Himalayas."},
+      {"title": "Himalayas", "text": "The Himalayas are a mountain range in Asia separating the plains of the Indian subcontinent from the Tibetan Plateau, containing Mount Everest."}
+    ]
+  },
+  {
+    "id": "hotpot_006",
+    "question": "What play, written by the author of Macbeth, features a prince of Denmark?",
+    "answer": "Hamlet",
+    "supporting_docs": [
+      {"title": "William Shakespeare", "text": "William Shakespeare wrote both Macbeth and Hamlet, among many other plays, in the late 16th and early 17th centuries."},
+      {"title": "Hamlet", "text": "Hamlet is a tragedy by William Shakespeare about Prince Hamlet of Denmark."}
+    ]
+  },
+  {
+    "id": "hotpot_007",
+    "question": "In what U.S. state did the Wright brothers make their first successful powered flight?",
+    "answer": "North Carolina",
+    "supporting_docs": [
+      {"title": "Wright brothers", "text": "The Wright brothers made the first successful sustained flights of a powered aircraft on December 17, 1903, near Kitty Hawk, North Carolina."},
+      {"title": "Kitty Hawk", "text": "Kitty Hawk is a town in North Carolina known as the site of the Wright brothers' first flight."}
+    ]
+  },
+  {
+    "id": "hotpot_008",
+    "question": "Who won a Nobel Prize in a different scientific field than the one she first won it in, eight years later?",
+    "answer": "Marie Curie",
+    "supporting_docs": [
+      {"title": "Marie Curie", "text": "Marie Curie won the Nobel Prize in Physics in 1903 and, eight years later in 1911, won the Nobel Prize in Chemistry."},
+      {"title": "Nobel Prize", "text": "Marie Curie remains the only person to win Nobel Prizes in two different sciences."}
+    ]
+  },
+  {
+    "id": "hotpot_009",
+    "question": "Which ocean, bordered by the Arctic Ocean to its north, is both the largest and deepest on Earth?",
+    "answer": "Pacific Ocean",
+    "supporting_docs": [
+      {"title": "Pacific Ocean", "text": "The Pacific Ocean is the largest and deepest of Earth's oceanic divisions, extending from the Arctic Ocean in the north to the Southern Ocean in the south."},
+      {"title": "Ocean", "text": "Earth's five oceans include the Pacific, which is both the largest by area and the deepest."}
+    ]
+  },
+  {
+    "id": "hotpot_010",
+    "question": "What wall, whose fall in 1989 symbolized the end of the Cold War, once divided a German city?",
+    "answer": "Berlin Wall",
+    "supporting_docs": [
+      {"title": "Berlin Wall", "text": "The Berlin Wall divided Berlin from 1961 until it fell on November 9, 1989, symbolizing the end of the Cold War."},
+      {"title": "Cold War", "text": "The fall of the Berlin Wall in 1989 is widely seen as a symbolic end to the Cold War era."}
+    ]
+  },
+  {
+    "id": "hotpot_011",
+    "question": "Which country gifted a statue to the United States that was dedicated in 1886?",
+    "answer": "France",
+    "supporting_docs": [
+      {"title": "Statue of Liberty", "text": "The Statue of Liberty was a gift from the people of France to the United States, dedicated on October 28, 1886."},
+      {"title": "Franco-American relations", "text": "France's gift of the Statue of Liberty in 1886 remains a lasting symbol of French-American friendship."}
+    ]
+  },
+  {
+    "id": "hotpot_012",
+    "question": "What class of animal, which breathes through gills, includes sharks?",
+    "answer": "Fish",
+    "supporting_docs": [
+      {"title": "Shark", "text": "Sharks are a group of elasmobranch fish that breathe through gills and do not nurse their young with milk."},
+      {"title": "Elasmobranchii", "text": "Elasmobranchii is a subclass of fish that includes sharks, rays, and skates."}
+    ]
+  }
+]

@@ -1,0 +1,271 @@
+{
+  "evaluation_metadata": {
+    "timestamp": "2026-09-18T20:23:35.440829+00:00",
+    "total_cases": 82,
+    "evaluation_mode": "live_llm",
+    "llm_available": true,
+    "llm_status": "Live LLM available",
+    "model": "qwen/qwen3.8-27b",
+    "embedding_model": "all-MiniLM-L6-v2",
+    "top_k": 3,
+    "dataset_counts": {
+      "HaluEval": 25,
+      "TruthfulQA": 25,
+      "FEVER": 20,
+      "HotpotQA": 12
+    }
+  },
+  "overall": {
+    "normal_rag": {
+      "accuracy": 72.0,
+      "precision": 13.4,
+      "recall": 13.4,
+      "f1": 30.5,
+      "hallucination_rate": 15.9,
+      "abstention_rate": 0.0,
+      "retrieval_relevance": 74.4,
+      "latency_ms": 114.4
+    },
+    "trust_aware": {
+      "accuracy": 61.0,
+      "precision": 0.6,
+      "recall": 14.6,
+      "f1": 7.8,
+      "hallucination_rate": 12.2,
+      "abstention_rate": 15.9,
+      "retrieval_relevance": 74.4,
+      "latency_ms": 1164.6,
+      "mean_trust_score": 0.809,
+      "ece": 0.2205,
+      "brier_score": 0.2168,
+      "verification_accuracy": 84.1,
+      "contradiction_detection_rate": 15.9
+    }
+  },
+  "calibration": {
+    "ece": 0.2205,
+    "brier_score": 0.2168,
+    "bins": [
+      {
+        "bin_index": 0,
+        "bin_range": [
+          0.0,
+          0.1
+        ],
+        "count": 1,
+        "mean_confidence": 0.056,
+        "accuracy": 0.0
+      },
+      {
+        "bin_index": 1,
+        "bin_range": [
+          0.1,
+          0.2
+        ],
+        "count": 0,
+        "mean_confidence": 0.15,
+        "accuracy": null
+      },
+      {
+        "bin_index": 2,
+        "bin_range": [
+          0.2,
+          0.3
+        ],
+        "count": 0,
+        "mean_confidence": 0.25,
+        "accuracy": null
+      },
+      {
+        "bin_index": 3,
+        "bin_range": [
+          0.3,
+          0.4
+        ],
+        "count": 3,
+        "mean_confidence": 0.3937,
+        "accuracy": 0.0
+      },
+      {
+        "bin_index": 4,
+        "bin_range": [
+          0.4,
+          0.5
+        ],
+        "count": 9,
+        "mean_confidence": 0.4067,
+        "accuracy": 0.0
+      },
+      {
+        "bin_index": 5,
+        "bin_range": [
+          0.5,
+          0.6
+        ],
+        "count": 0,
+        "mean_confidence": 0.55,
+        "accuracy": null
+      },
+      {
+        "bin_index": 6,
+        "bin_range": [
+          0.6,
+          0.7
+        ],
+        "count": 2,
+        "mean_confidence": 0.678,
+        "accuracy": 0.0
+      },
+      {
+        "bin_index": 7,
+        "bin_range": [
+          0.7,
+          0.8
+        ],
+        "count": 4,
+        "mean_confidence": 0.7863,
+        "accuracy": 1.0
+      },
+      {
+        "bin_index": 8,
+        "bin_range": [
+          0.8,
+          0.9
+        ],
+        "count": 25,
+        "mean_confidence": 0.863,
+        "accuracy": 0.8
+      },
+      {
+        "bin_index": 9,
+        "bin_range": [
+          0.9,
+          1.0
+        ],
+        "count": 38,
+        "mean_confidence": 0.9317,
+        "accuracy": 0.6842
+      }
+    ]
+  },
+  "datasets": {
+    "HaluEval": {
+      "cases": 25,
+      "normal_rag": {
+        "accuracy": 96.0,
+        "f1": 10.7,
+        "hallucination_rate": 20.0,
+        "abstention_rate": 0.0
+      },
+      "trust_aware": {
+        "accuracy": 96.0,
+        "f1": 6.9,
+        "hallucination_rate": 20.0,
+        "abstention_rate": 0.0
+      }
+    },
+    "TruthfulQA": {
+      "cases": 25,
+      "normal_rag": {
+        "accuracy": 56.0,
+        "f1": 45.5,
+        "hallucination_rate": 32.0,
+        "abstention_rate": 0.0
+      },
+      "trust_aware": {
+        "accuracy": 16.0,
+        "f1": 14.8,
+        "hallucination_rate": 20.0,
+        "abstention_rate": 52.0
+      }
+    },
+    "FEVER": {
+      "cases": 20,
+      "normal_rag": {
+        "accuracy": 50.0,
+        "f1": 0.0,
+        "hallucination_rate": 0.0,
+        "abstention_rate": 0.0
+      },
+      "trust_aware": {
+        "accuracy": 50.0,
+        "f1": 0.0,
+        "hallucination_rate": 0.0,
+        "abstention_rate": 0.0
+      },
+      "fever_metrics": {
+        "normal": {
+          "accuracy": 0.5,
+          "macro_precision": 0.1667,
+          "macro_recall": 0.3333,
+          "macro_f1": 0.2222,
+          "per_class": {
+            "SUPPORTS": {
+              "precision": 0.5,
+              "recall": 1.0,
+              "f1": 0.6667,
+              "support": 10
+            },
+            "REFUTES": {
+              "precision": 0.0,
+              "recall": 0.0,
+              "f1": 0.0,
+              "support": 7
+            },
+            "NOT ENOUGH INFO": {
+              "precision": 0.0,
+              "recall": 0.0,
+              "f1": 0.0,
+              "support": 3
+            }
+          }
+        },
+        "trust_aware": {
+          "accuracy": 0.5,
+          "macro_precision": 0.1667,
+          "macro_recall": 0.3333,
+          "macro_f1": 0.2222,
+          "per_class": {
+            "SUPPORTS": {
+              "precision": 0.5,
+              "recall": 1.0,
+              "f1": 0.6667,
+              "support": 10
+            },
+            "REFUTES": {
+              "precision": 0.0,
+              "recall": 0.0,
+              "f1": 0.0,
+              "support": 7
+            },
+            "NOT ENOUGH INFO": {
+              "precision": 0.0,
+              "recall": 0.0,
+              "f1": 0.0,
+              "support": 3
+            }
+          }
+        }
+      }
+    },
+    "HotpotQA": {
+      "cases": 12,
+      "normal_rag": {
+        "accuracy": 91.7,
+        "f1": 91.7,
+        "hallucination_rate": 0.0,
+        "abstention_rate": 0.0
+      },
+      "trust_aware": {
+        "accuracy": 100.0,
+        "f1": 8.2,
+        "hallucination_rate": 0.0,
+        "abstention_rate": 0.0
+      },
+      "hotpot_metrics": {
+        "normal_em": 91.7,
+        "trust_em": 0.0
+      }
+    }
+  }
+}

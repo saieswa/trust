@@ -241,7 +241,11 @@ def calculate_fallback_trust_score(
     )
 
     if features.verifier_agreement is not None:
-        base_quality = 0.80 * base_quality + 0.20 * features.verifier_agreement
+        # Heavily penalize unverified or unsupported answers
+        if features.verifier_agreement < 0.50:
+            base_quality = min(base_quality * features.verifier_agreement, 0.35)
+        else:
+            base_quality = 0.60 * base_quality + 0.40 * features.verifier_agreement
 
     # 2. Contradiction Penalty Multiplier: severe penalty for conflicting claims
     # If contradiction_ratio is 0 -> multiplier 1.0; if 0.5 -> multiplier 0.575; if 1.0 -> multiplier 0.15
@@ -457,13 +461,16 @@ def calculate_trust_score(
         trust_score = calculate_fallback_trust_score(features, outdated_ratio=outdated_ratio)
         scoring_method = "weighted_fallback"
 
+    # Strict guard: Penalize trust score if verifier agreement is provided and low
+    if f_ver is not None and f_ver < 0.50:
+        trust_score = min(trust_score, 0.35)
     overall_score = trust_score
     trust_percentage = int(round(trust_score * 100))
 
-    # Categorization based on configurable thresholds
-    if overall_score >= high_threshold and total_contradictions == 0:
+    # Categorization based on configurable thresholds and verifier agreement
+    if overall_score >= high_threshold and total_contradictions == 0 and (f_ver is None or f_ver >= 0.70):
         trust_level = "HIGH_TRUST"
-    elif overall_score >= low_threshold:
+    elif overall_score >= low_threshold and (f_ver is None or f_ver >= 0.40):
         trust_level = "MODERATE_TRUST"
     else:
         trust_level = "LOW_TRUST"

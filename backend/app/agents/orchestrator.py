@@ -227,43 +227,138 @@ class TrustAwareOrchestrator:
             if c.get("chunk_id") and c.get("source")
         ]
 
-        final_answer = sanitize_answer(synthesis_result.get("answer", ""), evidence=valid_evidence)
+        # 6. Verifier Agent & Answer Quality Check
+        answer_text = synthesis_result.get("answer", "")
+        claims = synthesis_result.get("claims", [])
+        verification_result = self._run_verifier(
+            question=q,
+            answer=answer_text,
+            claims=claims,
+            evidence=valid_evidence,
+            doc_id=doc_id,
+            trust_score=trust_result.overall_score,
+        )
+
+        v_score = float(verification_result.get("verification_score", 1.0))
+        v_status = str(verification_result.get("status", "SUPPORTED"))
+
+        # 7. Recalibrate Trust Score with Verifier Score
+        calibrated_trust = calculate_trust_score(
+            evaluations=evaluations,
+            contradictions=contradictions,
+            retrieval_scores=retrieval_scores,
+            verifier_score=v_score,
+        )
+
+        # 8. Guard: If answer quality failed, is unsupported, or expresses lack of information, abstain honestly
+        is_refusal = any(
+            phrase in answer_text.lower()
+            for phrase in (
+                "no information",
+                "not find enough information",
+                "could not find",
+                "does not contain enough information",
+                "insufficient information",
+                "cannot be answered",
+                "not enough information",
+                "does not mention",
+                "no evidence",
+            )
+        )
+        if is_refusal or v_status in ("UNSUPPORTED", "ABSTAINED") or calibrated_trust.overall_score < 0.40 or calibrated_trust.trust_level == "LOW_TRUST":
+            if is_refusal:
+                final_refusal = answer_text
+                abstention_reason = "The uploaded document does not contain enough information to answer this question."
+            else:
+                final_refusal = "I could not find enough information in the uploaded document to provide a reliable answer."
+                abstention_reason = "Answer could not be reliably verified against the document evidence."
+
+            calibrated_trust = calculate_trust_score(
+                evaluations=evaluations,
+                contradictions=contradictions,
+                retrieval_scores=retrieval_scores,
+                verifier_score=0.0,
+            )
+
+            return {
+                "answer": final_refusal,
+                "final_answer": final_refusal,
+                "verification_status": "ABSTAINED",
+                "claim_level_verification": verification_result.get("claims", []),
+                "supporting_evidence": [],
+                "trust_score": calibrated_trust.to_dict(),
+                "revision_count": 0,
+                "document_id": doc_id,
+                "question": q,
+                "abstention": True,
+                "abstention_reason": abstention_reason,
+                "sources": [],
+                "evidence": [],
+                "retrieval_results": valid_evidence,
+                "evaluations": evaluations,
+                "contradictions": contradictions,
+                "agent_trace": trace,
+                "mode": "normal",
+            }
+
+        # Deduplicate & canonicalize sources
+        raw_sources = synthesis_result.get("sources", [])
+        cleaned_sources = []
+        seen_sources = set()
+        for s in raw_sources:
+            raw_name = (s.get("filename") or "Document").split("#")[0].strip()
+            pnum = s.get("page") if s.get("page") is not None else s.get("page_number")
+            canonical = f"{raw_name} — Page {pnum}" if pnum is not None else raw_name
+            key = (raw_name, str(pnum) if pnum is not None else "")
+            if key not in seen_sources:
+                seen_sources.add(key)
+                cleaned_sources.append({
+                    "source": canonical,
+                    "canonical_source": canonical,
+                    "filename": raw_name,
+                    "page_number": pnum,
+                    "page": pnum,
+                    "document_id": doc_id,
+                })
+
+        final_answer = sanitize_answer(answer_text, evidence=valid_evidence)
 
         return {
             "answer": final_answer,
             "final_answer": final_answer,
-            "verification_status": "SUPPORTED",
-            "claim_level_verification": [
+            "verification_status": v_status,
+            "claim_level_verification": verification_result.get("claims", [
                 {"claim": c.get("text", c.get("claim", "")), "supported": True}
                 for c in synthesis_result.get("claims", [])
-            ],
+            ]),
             "supporting_evidence": evidence_references,
-            "trust_score": trust_result.to_dict(),
+            "trust_score": calibrated_trust.to_dict(),
             "revision_count": 0,
             "document_id": doc_id,
             "question": q,
             "abstention": False,
             "abstention_reason": None,
-            "sources": synthesis_result.get("sources", []),
-            "source_information": synthesis_result.get("source_information", synthesis_result.get("sources", [])),
+            "sources": cleaned_sources,
+            "source_information": cleaned_sources,
             "cited_evidence": synthesis_result.get("cited_evidence", []),
             "evidence": evidence_references,
             "retrieval_results": valid_evidence,
             "evaluations": evaluations,
             "contradictions": contradictions,
-            "claims": synthesis_result.get("claims", []),
-            "verified_claims": synthesis_result.get("claims", []),
+            "claims": verification_result.get("claims", synthesis_result.get("claims", [])),
+            "verified_claims": verification_result.get("claims", synthesis_result.get("claims", [])),
             "verification": {
-                "status": "SUPPORTED",
-                "verification_score": 1.0,
-                "hallucination_risk": 0.0,
-                "hallucination_detected": False,
+                "status": v_status,
+                "verification_score": v_score,
+                "hallucination_risk": verification_result.get("hallucination_risk", "LOW"),
+                "hallucination_detected": verification_result.get("hallucination_detected", False),
                 "requires_revision": False,
-                "summary": "Fast grounded verification via preloaded trust model.",
+                "summary": "Verified against accepted document evidence.",
             },
             "agent_trace": trace,
             "mode": "normal",
         }
+
 
     def run(
         self,
@@ -649,22 +744,71 @@ class TrustAwareOrchestrator:
 
         claims_list = verification_result.get("claims") or verification_result.get("verified_claims") or []
 
+        # Recalibrate trust score with verifier score
+        final_v_score = verification_result.get("verification_score")
+        calibrated_trust = calculate_trust_score(
+            evaluations=evaluations,
+            contradictions=contradictions,
+            retrieval_scores=retrieval_scores,
+            verifier_score=final_v_score,
+        )
+
+        # Deduplicate & canonicalize sources
+        raw_sources = synthesis_result.get("sources", [])
+        cleaned_sources = []
+        seen_sources = set()
+        for s in raw_sources:
+            raw_name = (s.get("filename") or "Document").split("#")[0].strip()
+            pnum = s.get("page") if s.get("page") is not None else s.get("page_number")
+            canonical = f"{raw_name} — Page {pnum}" if pnum is not None else raw_name
+            key = (raw_name, str(pnum) if pnum is not None else "")
+            if key not in seen_sources:
+                seen_sources.add(key)
+                cleaned_sources.append({
+                    "source": canonical,
+                    "canonical_source": canonical,
+                    "filename": raw_name,
+                    "page_number": pnum,
+                    "page": pnum,
+                    "document_id": doc_id,
+                })
+        is_deep_refusal = any(
+            phrase in final_answer.lower()
+            for phrase in (
+                "no information",
+                "not find enough information",
+                "could not find",
+                "does not contain enough information",
+                "insufficient information",
+                "cannot be answered",
+                "not enough information",
+                "does not mention",
+                "no evidence",
+            )
+        )
+        should_abstain = is_deep_refusal or verification_status in ("UNSUPPORTED", "ABSTAINED") or calibrated_trust.trust_level == "LOW_TRUST"
+        abstention_reason = (
+            "The uploaded document does not contain enough information to answer this question."
+            if is_deep_refusal
+            else ("Answer could not be reliably verified against the document evidence." if should_abstain else None)
+        )
+
         return {
             "answer": final_answer,
             "final_answer": final_answer,
             "verification_status": verification_status,
             "claim_level_verification": claims_list,
             "supporting_evidence": evidence_references,
-            "trust_score": trust_result.to_dict(),
+            "trust_score": calibrated_trust.to_dict(),
             "revision_count": revision_count,
             # Backwards compatibility fields
             "document_id": doc_id,
             "question": q,
-            "abstention": False,
-            "abstention_reason": None,
+            "abstention": should_abstain,
+            "abstention_reason": abstention_reason,
             "decision": decision.to_dict(),
-            "sources": synthesis_result.get("sources", []),
-            "source_information": synthesis_result.get("source_information", synthesis_result.get("sources", [])),
+            "sources": cleaned_sources,
+            "source_information": cleaned_sources,
             "cited_evidence": synthesis_result.get("cited_evidence", []),
             "evidence": evidence_references,
             "retrieval_results": evidence,
@@ -678,7 +822,7 @@ class TrustAwareOrchestrator:
                 "hallucination_risk": verification_result.get("hallucination_risk"),
                 "hallucination_detected": verification_result.get("hallucination_detected") or bool(unsupported_claims),
                 "requires_revision": bool(unsupported_claims),
-                "revised_trust_score": verification_result.get("revised_trust_score"),
+                "revised_trust_score": calibrated_trust.overall_score,
                 "summary": verification_result.get("summary"),
             },
             "agent_trace": trace,

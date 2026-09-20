@@ -104,37 +104,47 @@ function extractCleanSources(payload) {
   const sources = [];
   const seen = new Set();
 
-  const add = (filename, page) => {
-    if (!filename) return;
-    const cleanName = filename.replace(/^.*[\\/]/, "");
-    const pageNum = page != null ? String(page) : null;
-    const key = `${cleanName}::${pageNum || ""}`;
+  const add = (rawName, page) => {
+    if (!rawName) return;
+    let cleanName = String(rawName).replace(/^.*[\\/]/, "");
+    let inferredPage = page != null ? String(page) : null;
+    if (cleanName.includes("#page=")) {
+      const parts = cleanName.split("#page=");
+      cleanName = parts[0];
+      if (!inferredPage) inferredPage = parts[1];
+    } else if (cleanName.includes(" — Page ")) {
+      const parts = cleanName.split(" — Page ");
+      cleanName = parts[0];
+      if (!inferredPage) inferredPage = parts[1];
+    }
+    cleanName = cleanName.replace(/#.*$/, "").trim();
+
+    const key = `${cleanName.toLowerCase()}::${inferredPage || ""}`;
     if (!seen.has(key)) {
       seen.add(key);
-      sources.push({ filename: cleanName, page: pageNum });
+      sources.push({ filename: cleanName, page: inferredPage });
     }
   };
 
   if (Array.isArray(payload.sources)) {
     payload.sources.forEach((s) => {
       if (typeof s === "string") {
-        const parts = s.split("#page=");
-        add(parts[0], parts[1]);
+        add(s, null);
       } else if (s && typeof s === "object") {
         add(s.filename || s.source, s.page_number ?? s.page);
       }
     });
   }
 
-  if (Array.isArray(payload.supporting_evidence)) {
+  if (sources.length === 0 && Array.isArray(payload.supporting_evidence)) {
     payload.supporting_evidence.forEach((e) => {
-      add(e.filename || e.source, e.page_number);
+      add(e.filename || e.source, e.page_number ?? e.page);
     });
   }
 
   if (sources.length === 0 && Array.isArray(payload.retrieval_results)) {
     payload.retrieval_results.forEach((r) => {
-      add(r.filename || r.source, r.page_number);
+      add(r.filename || r.source, r.page_number ?? r.page);
     });
   }
 

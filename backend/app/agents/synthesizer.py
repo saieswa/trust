@@ -17,30 +17,30 @@ from app.llm.groq_client import GroqClientError, GroqLLMClient, get_groq_client,
 logger = logging.getLogger(__name__)
 
 SYNTHESIZER_SYSTEM_PROMPT = """You are an expert Synthesizer Agent in a Trust-Aware RAG system.
-Your mission is to formulate an accurate, concise, readable, and strictly evidence-grounded answer to the user's question using ONLY the critic-approved evidence chunks provided below.
+Your mission is to formulate an accurate, concise, readable, and strictly evidence-grounded answer to the user's question using ONLY from accepted evidence chunks provided below.
 
-STRICT GROUNDING INSTRUCTIONS:
-1. Answer ONLY from accepted evidence provided in the prompt context.
-2. Do NOT invent facts or extrapolate beyond what the evidence directly states.
+STRICT INSTRUCTIONS & REQUIREMENTS:
+1. Answer ONLY from accepted evidence provided in the prompt context. Directly answer the question first in clear, natural, and grammatically complete sentences.
+2. Use ONLY information strictly supported by the accepted evidence. Do NOT invent facts or extrapolate beyond what the evidence directly states.
 3. Do NOT fill missing information using outside or pre-trained knowledge.
 4. Do NOT cite sources or documents not present in the provided evidence.
-5. Keep the answer readable, well-structured, and clear.
+5. Keep the answer readable, well-structured, clear, and understandable to a student.
 6. Clearly indicate uncertainty when evidence is incomplete or when the answer is not present in the document:
    - If the answer cannot be found in the document evidence, explicitly state: "Based on the provided document evidence, there is no information to answer this question."
    - If the evidence only partially answers the question, answer the supported parts and clearly explain what information is missing.
-7. Extract individual atomic claims made in your answer so they can be independently verified, linking each claim to its cited chunk_ids.
+7. Do NOT copy incomplete sentence fragments, raw slice tags, or sliced text.
+8. Do NOT combine unrelated evidence.
+9. Do NOT mention internal chunk IDs, UUIDs, or database identifiers anywhere in the text of the answer.
+10. Do NOT mention the retrieval or evaluation process unless specifically asked.
+11. Prefer a clear, concise, well-structured explanation over blindly reproducing raw evidence.
+12. Ensure the final answer is grammatically complete and coherent.
 
 STRUCTURE & FORMATTING REQUIREMENTS:
-- Always format the answer with clear markdown headings (###) and bulleted points.
+- Always format the answer with clear markdown headings (###) and bullet points where helpful.
 - Provide a clear 1-2 sentence core definition under an introductory heading (e.g., "### Overview").
 - Group important concepts under distinct headings (e.g., "### Core Principles", "### How It Works", "### Key Conditions", "### Applications").
-- Present distinct facts, rules, and steps as clear bullet points with bold labels (e.g., "- **Concept Name:** Explanation").
 - Conclude with a brief 1-sentence summary under "### Summary".
-- Avoid continuous walls of unstructured text.
-- CITATIONS & SOURCE FORMATTING:
-  - NEVER output internal IDs, UUIDs, chunk keys, or database IDs in the text of the answer.
-  - Do NOT write citations like {chunk_id}, (cite: chunk_id), or [chunk-0001].
-  - If citing sources in the answer text, use ONLY readable human citations such as: "(Source: <filename>, Page <page_number>)".
+- If citing sources in the answer text, use ONLY readable human citations such as: "(Source: <filename>, Page <page_number>)".
 
 You must return ONLY valid JSON matching this schema:
 {
@@ -48,7 +48,7 @@ You must return ONLY valid JSON matching this schema:
   "claims": [
     {
       "claim_id": "claim-1",
-      "text": "<specific factual statement>",
+      "text": "<specific atomic factual statement>",
       "cited_chunk_ids": ["<chunk_id>"]
     }
   ]
@@ -106,8 +106,7 @@ class SynthesizerAgent:
     def model(self) -> str:
         if self._model:
             return self._model
-        client_m = getattr(self.llm_client, "model", "groq/compound-mini")
-        return "groq/compound-mini" if client_m == "openai/gpt-oss-20b" else client_m
+        return getattr(self.llm_client, "model", "qwen/qwen3.8-27b")
 
     def synthesize(
         self,
@@ -602,52 +601,72 @@ class SynthesizerAgent:
                     messages=messages,
                     response_format={"type": "json_object"},
                     temperature=0,
-                    max_tokens=600,
+                    max_tokens=1024,
                 )
                 content = response.choices[0].message.content.strip()
                 return _remap_claims(_parse_json(content))
             except Exception as exc:
-                logger.exception("Synthesizer LLM generation failed: %s", exc)
-                raise GroqClientError(f"Synthesizer LLM generation failed: {exc}") from exc
+                logger.warning("Synthesizer LLM generation failed: %s, using deterministic fallback", exc)
 
-        # Mock fallback for test harnesses without active LLM
+        # Deterministic fallback when LLM is unavailable / rate-limited:
+        # Extract complete, grammatical sentences matching the question keywords.
+        # NEVER return a sliced character fragment prefixed with 'Answer grounded on evidence:'.
         q_lower = question.lower()
-        evidence_texts = " ".join(c.get("text", "") for c in valid_evidence).lower()
+        q_keywords = [
+            w for w in re.findall(r"\w+", q_lower)
+            if len(w) > 2 and w not in ("what", "when", "where", "which", "does", "have", "with", "this", "that", "from", "your", "explain")
+        ]
 
-        # Check if question keywords appear in evidence
-        q_keywords = [w for w in re.findall(r"\w+", q_lower) if len(w) > 3 and w not in ("what", "when", "where", "which", "does", "have")]
-        has_overlap = any(kw in evidence_texts for kw in q_keywords) if q_keywords else True
+        candidate_sentences: list[tuple[str, str]] = []
+        for chunk in valid_evidence:
+            cid = str(chunk.get("chunk_id", ""))
+            c_text = chunk.get("text", "")
+            # Split into complete sentences
+            sents = [s.strip() for s in re.split(r"(?<=[.!?])\s+", c_text) if len(s.strip()) > 20]
+            for s in sents:
+                s_lower = s.lower()
+                matches = sum(1 for kw in q_keywords if kw in s_lower)
+                if matches > 0:
+                    candidate_sentences.append((s, cid))
 
-        if not has_overlap:
+        if not candidate_sentences:
             return {
-                "answer": "Based on the provided document evidence, there is no information to answer this question.",
+                "answer": "I could not find enough information in the uploaded document to provide a reliable answer.",
                 "claims": [],
             }
 
-        first_chunk = valid_evidence[0]
+        selected = candidate_sentences[:3]
+        clean_answer = " ".join(s[0] for s in selected)
+        claims = [
+            {
+                "claim_id": f"claim-{idx+1}",
+                "text": s[0],
+                "cited_chunk_ids": [s[1]],
+            }
+            for idx, s in enumerate(selected)
+        ]
         return {
-            "answer": f"Answer grounded on evidence: {first_chunk.get('text', '')[:100]}...",
-            "claims": [
-                {
-                    "claim_id": "claim-1",
-                    "text": first_chunk.get("text", "")[:100],
-                    "cited_chunk_ids": [str(first_chunk.get("chunk_id", ""))],
-                }
-            ],
+            "answer": clean_answer,
+            "claims": claims,
         }
 
     def _extract_sources(self, evidence: list[dict[str, Any]], document_id: str) -> list[dict[str, Any]]:
         sources: list[dict[str, Any]] = []
         seen = set()
         for e in evidence:
-            src = e.get("source") or e.get("filename")
-            key = (src, e.get("page_number"))
-            if src and key not in seen:
+            raw_name = e.get("filename") or "Document"
+            fname = raw_name.split("#")[0].strip()
+            pnum = e.get("page") if e.get("page") is not None else e.get("page_number")
+            canonical = f"{fname} — Page {pnum}" if pnum is not None else fname
+            key = (fname, str(pnum) if pnum is not None else "")
+            if key not in seen:
                 seen.add(key)
                 sources.append({
-                    "source": src,
-                    "filename": e.get("filename"),
-                    "page_number": e.get("page_number"),
+                    "source": canonical,
+                    "canonical_source": canonical,
+                    "filename": fname,
+                    "page_number": pnum,
+                    "page": pnum,
                     "document_id": document_id,
                 })
         return sources

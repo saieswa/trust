@@ -108,11 +108,9 @@ def _handle_rate_limit_pause(exc: Exception) -> None:
 		if match:
 			val, unit = float(match.group(1)), match.group(2)
 			sleep_s = (val / 1000.0 if unit == "ms" else val) + 0.5
-			if sleep_s > 8.0:
-				raise GroqClientError(f"Rate limit cooldown too long ({sleep_s:.1f}s): {exc}") from exc
-			time.sleep(min(sleep_s, 8.0))
+			time.sleep(min(sleep_s, 15.0))
 		else:
-			time.sleep(1.0)
+			time.sleep(1.5)
 
 
 class GroqLLMClient:
@@ -219,12 +217,10 @@ class GroqLLMClient:
 				except Exception as exc:
 					last_exc = exc
 					logger.warning("Groq model %s attempt %d failed: %s", candidate_model, attempt + 1, exc)
-					if "rate_limit" in str(exc).lower() or "429" in str(exc):
-						break
 					try:
 						_handle_rate_limit_pause(exc)
 					except Exception:
-						break
+						pass
 			if answer:
 				break
 
@@ -271,12 +267,10 @@ class GroqLLMClient:
 				except Exception as exc:
 					last_exc = exc
 					logger.warning("Groq JSON model %s attempt %d failed: %s", candidate_model, attempt + 1, exc)
-					if "rate_limit" in str(exc).lower() or "429" in str(exc):
-						break
 					try:
 						_handle_rate_limit_pause(exc)
 					except Exception:
-						break
+						pass
 
 		raise GroqClientError(
 			f"Groq JSON completion failed across all models: {type(last_exc).__name__}: {last_exc}"

@@ -406,17 +406,44 @@ def calculate_trust_score(
     f_qual = sum(quality_scores) / len(quality_scores) if quality_scores else 0.50
 
     # 4. Feature: Contradiction Ratio (f_contra)
-    contradiction_count = len(contradictions)
-    chunk_contra_count = sum(
-        1 for e in valid_chunks
-        if "contradiction" in str(e.get("contradiction_status", "")).lower()
-        or str(e.get("support_status", "")).lower() == "contradicted"
-    )
-    total_contradictions = max(contradiction_count, chunk_contra_count)
-    f_contra = min(1.0, total_contradictions / len(valid_chunks))
+    fatal_contradictions = [
+        c for c in contradictions
+        if not (
+            (isinstance(c, Mapping) and (c.get("is_debunked") or c.get("contradiction_type") == "unverified_refuted"))
+            or getattr(c, "is_debunked", False)
+        )
+    ]
+    fatal_contra_count = len(fatal_contradictions)
+
+    debunked_cids = {
+        str(cid)
+        for c in contradictions
+        if (isinstance(c, Mapping) and (c.get("is_debunked") or c.get("contradiction_type") == "unverified_refuted"))
+        for cid in (c.get("chunk_a"), c.get("chunk_b"), c.get("chunk_id_a"), c.get("chunk_id_b"), c.get("unverified_chunk_id"))
+        if cid
+    }
+    fatal_cids = {
+        str(cid)
+        for c in fatal_contradictions
+        for cid in (c.get("chunk_a"), c.get("chunk_b"), c.get("chunk_id_a"), c.get("chunk_id_b"))
+        if cid
+    }
+
+    chunk_contra_count = 0
+    for e in valid_chunks:
+        cid = str(e.get("chunk_id", ""))
+        contra_st = str(e.get("contradiction_status", "")).lower()
+        supp_st = str(e.get("support_status", "")).lower()
+        if cid in fatal_cids:
+            chunk_contra_count += 1
+        elif cid not in debunked_cids and ("contradiction" in contra_st or supp_st == "contradicted"):
+            chunk_contra_count += 1
+
+    total_fatal_contradictions = max(fatal_contra_count, chunk_contra_count)
+    f_contra = min(1.0, total_fatal_contradictions / len(valid_chunks))
 
     # 5. Feature: Evidence Agreement (f_agree)
-    if total_contradictions > 0:
+    if total_fatal_contradictions > 0:
         f_agree = max(0.0, 1.0 - 1.2 * f_contra)
     else:
         f_agree = min(1.0, 0.70 + 0.30 * f_supp) if f_rel > 0 else 0.0
@@ -439,7 +466,7 @@ def calculate_trust_score(
     outdated_ratio = outdated_count / len(valid_chunks)
 
     # Legacy component metrics
-    s_cons = max(0.05, 1.0 - 0.45 * total_contradictions) if total_contradictions > 0 else 1.0
+    s_cons = max(0.05, 1.0 - 0.45 * total_fatal_contradictions) if total_fatal_contradictions > 0 else 1.0
     s_fresh = max(0.20, 1.0 - 0.35 * outdated_ratio) if outdated_count > 0 else 1.0
 
     features = TrustFeatures(
@@ -467,8 +494,13 @@ def calculate_trust_score(
     overall_score = trust_score
     trust_percentage = int(round(trust_score * 100))
 
+    logger.info(
+        "Trust Score Calculated: %.3f (%s) [f_rel=%.2f, f_supp=%.2f, f_qual=%.2f, f_agree=%.2f, f_contra=%.2f (fatal=%d, total=%d), f_conf=%.2f]",
+        trust_score, scoring_method, f_rel, f_supp, f_qual, f_agree, f_contra, total_fatal_contradictions, len(contradictions), f_conf
+    )
+
     # Categorization based on configurable thresholds and verifier agreement
-    if overall_score >= high_threshold and total_contradictions == 0 and (f_ver is None or f_ver >= 0.70):
+    if overall_score >= high_threshold and total_fatal_contradictions == 0 and (f_ver is None or f_ver >= 0.70):
         trust_level = "HIGH_TRUST"
     elif overall_score >= low_threshold and (f_ver is None or f_ver >= 0.40):
         trust_level = "MODERATE_TRUST"
@@ -476,9 +508,13 @@ def calculate_trust_score(
         trust_level = "LOW_TRUST"
 
     warnings: list[str] = []
-    if total_contradictions > 0:
+    if total_fatal_contradictions > 0:
         warnings.append(
-            f"Cross-chunk factual contradiction detected ({total_contradictions} instance(s)). Consistency penalized."
+            f"Fatal cross-chunk factual contradiction detected ({total_fatal_contradictions} instance(s)). Consistency penalized."
+        )
+    elif len(contradictions) > 0:
+        warnings.append(
+            f"{len(contradictions)} unverified claim conflict(s) resolved via authoritative reference evidence."
         )
     if outdated_count > 0:
         warnings.append(
@@ -500,7 +536,7 @@ def calculate_trust_score(
         s_fresh=s_fresh,
         relevant_count=len(relevant_chunks),
         total_valid=len(valid_chunks),
-        total_contradictions=total_contradictions,
+        total_contradictions=total_fatal_contradictions,
         outdated_count=outdated_count,
         scoring_method=scoring_method,
     )
@@ -523,7 +559,7 @@ def calculate_trust_score(
             total_chunks=total_chunks,
             relevant_chunks=len(relevant_chunks),
             supporting_chunks=len(supporting_chunks),
-            contradicting_chunks=total_contradictions,
+            contradicting_chunks=total_fatal_contradictions,
             outdated_chunks=outdated_count,
             unrelated_chunks=unrelated_count,
         ),

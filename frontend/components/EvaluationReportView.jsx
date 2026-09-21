@@ -609,6 +609,236 @@ export default function EvaluationReportView() {
             </div>
           </div>
 
+          {/* ACCURACY COMPARISON CHART */}
+          <section className="eval-section-card" style={{ marginBottom: "26px" }}>
+            <div className="eval-section-header">
+              <div>
+                <h3 className="eval-section-title">Accuracy Comparison</h3>
+                <p className="eval-section-subtitle">
+                  Empirical head-to-head accuracy benchmarking Normal RAG (Baseline) against Trust-Aware RAG.
+                </p>
+              </div>
+              <div style={{ display: "flex", alignItems: "center", gap: "16px" }}>
+                <div style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "12px", color: "#4b5563" }}>
+                  <span style={{ display: "inline-block", width: "12px", height: "12px", borderRadius: "3px", background: "#94a3b8" }}></span>
+                  <span>Normal RAG (Baseline)</span>
+                </div>
+                <div style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "12px", color: "#1e40af", fontWeight: 600 }}>
+                  <span style={{ display: "inline-block", width: "12px", height: "12px", borderRadius: "3px", background: "#2563eb" }}></span>
+                  <span>Trust-Aware RAG</span>
+                </div>
+              </div>
+            </div>
+
+            {/* CHART SVG CONTAINER */}
+            <div style={{ padding: "20px 16px 12px 16px", background: "#f9fafb", borderRadius: "8px", border: "1px solid #e5e7eb" }}>
+              <div style={{ width: "100%", maxWidth: "780px", margin: "0 auto" }}>
+                {(() => {
+                  const comparisonItems = [
+                    {
+                      label: "Overall",
+                      normal: Number(overallNormal.accuracy ?? 0),
+                      trust: Number(overallTrust.accuracy ?? 0),
+                      isOverall: true,
+                    },
+                    {
+                      label: "HaluEval",
+                      normal: Number(datasetsMap?.HaluEval?.normal_rag?.accuracy ?? 0),
+                      trust: Number(datasetsMap?.HaluEval?.trust_aware?.accuracy ?? 0),
+                    },
+                    {
+                      label: "TruthfulQA",
+                      normal: Number(datasetsMap?.TruthfulQA?.normal_rag?.accuracy ?? 0),
+                      trust: Number(datasetsMap?.TruthfulQA?.trust_aware?.accuracy ?? 0),
+                    },
+                    {
+                      label: "FEVER",
+                      normal: Number(datasetsMap?.FEVER?.normal_rag?.accuracy ?? 0),
+                      trust: Number(datasetsMap?.FEVER?.trust_aware?.accuracy ?? 0),
+                    },
+                    {
+                      label: "HotpotQA",
+                      normal: Number(datasetsMap?.HotpotQA?.normal_rag?.accuracy ?? 0),
+                      trust: Number(datasetsMap?.HotpotQA?.trust_aware?.accuracy ?? 0),
+                    },
+                  ];
+
+                  const svgWidth = 740;
+                  const svgHeight = 270;
+                  const chartTop = 35;
+                  const chartBottom = 220;
+                  const chartHeight = chartBottom - chartTop;
+                  const chartLeft = 55;
+                  const chartRight = 710;
+                  const chartWidth = chartRight - chartLeft;
+                  const groupWidth = chartWidth / comparisonItems.length;
+                  const barWidth = 26;
+                  const barGap = 6;
+
+                  return (
+                    <svg
+                      viewBox={`0 0 ${svgWidth} ${svgHeight}`}
+                      style={{ width: "100%", height: "auto", overflow: "visible" }}
+                      role="img"
+                      aria-label="Accuracy Comparison Chart"
+                    >
+                      {/* Grid Lines & Y-Axis Labels */}
+                      {[0, 25, 50, 75, 100].map((tick) => {
+                        const y = chartBottom - (tick / 100) * chartHeight;
+                        return (
+                          <g key={tick}>
+                            <line
+                              x1={chartLeft}
+                              y1={y}
+                              x2={chartRight}
+                              y2={y}
+                              stroke="#e5e7eb"
+                              strokeDasharray={tick === 0 ? "none" : "3 3"}
+                              strokeWidth={tick === 0 ? "1.5" : "1"}
+                            />
+                            <text
+                              x={chartLeft - 10}
+                              y={y + 4}
+                              textAnchor="end"
+                              fontSize="11"
+                              fill="#6b7280"
+                              fontWeight="500"
+                            >
+                              {tick}%
+                            </text>
+                          </g>
+                        );
+                      })}
+
+                      {/* X Axis Baseline */}
+                      <line
+                        x1={chartLeft}
+                        y1={chartBottom}
+                        x2={chartRight}
+                        y2={chartBottom}
+                        stroke="#9ca3af"
+                        strokeWidth="1.5"
+                      />
+
+                      {/* Bar Groups */}
+                      {comparisonItems.map((item, idx) => {
+                        const groupCenterX = chartLeft + (idx + 0.5) * groupWidth;
+                        const normalBarX = groupCenterX - barWidth - barGap / 2;
+                        const trustBarX = groupCenterX + barGap / 2;
+
+                        const normalBarHeight = Math.max(2, (item.normal / 100) * chartHeight);
+                        const trustBarHeight = Math.max(2, (item.trust / 100) * chartHeight);
+
+                        const normalBarY = chartBottom - normalBarHeight;
+                        const trustBarY = chartBottom - trustBarHeight;
+
+                        const delta = item.trust - item.normal;
+                        const isPositiveDelta = delta >= 0;
+
+                        return (
+                          <g key={item.label}>
+                            {/* Subtle group separator / background highlight for Overall */}
+                            {item.isOverall && (
+                              <rect
+                                x={groupCenterX - groupWidth / 2 + 6}
+                                y={chartTop - 10}
+                                width={groupWidth - 12}
+                                height={chartHeight + 10}
+                                fill="#eff6ff"
+                                opacity="0.4"
+                                rx="6"
+                              />
+                            )}
+
+                            {/* Delta Badge above bars */}
+                            <g>
+                              <rect
+                                x={groupCenterX - 24}
+                                y={Math.min(normalBarY, trustBarY) - 24}
+                                width="48"
+                                height="17"
+                                rx="4"
+                                fill={isPositiveDelta ? "#dcfce7" : "#fee2e2"}
+                                stroke={isPositiveDelta ? "#86efac" : "#fca5a5"}
+                                strokeWidth="0.8"
+                              />
+                              <text
+                                x={groupCenterX}
+                                y={Math.min(normalBarY, trustBarY) - 12}
+                                textAnchor="middle"
+                                fontSize="10"
+                                fontWeight="700"
+                                fill={isPositiveDelta ? "#15803d" : "#dc2626"}
+                              >
+                                {isPositiveDelta ? `+${delta.toFixed(1)}%` : `${delta.toFixed(1)}%`}
+                              </text>
+                            </g>
+
+                            {/* Normal RAG Bar */}
+                            <rect
+                              x={normalBarX}
+                              y={normalBarY}
+                              width={barWidth}
+                              height={normalBarHeight}
+                              fill="#94a3b8"
+                              rx="3"
+                            >
+                              <title>{`Normal RAG (${item.label}): ${item.normal}%`}</title>
+                            </rect>
+                            <text
+                              x={normalBarX + barWidth / 2}
+                              y={normalBarY - 4}
+                              textAnchor="middle"
+                              fontSize="10"
+                              fontWeight="600"
+                              fill="#475569"
+                            >
+                              {item.normal}%
+                            </text>
+
+                            {/* Trust-Aware RAG Bar */}
+                            <rect
+                              x={trustBarX}
+                              y={trustBarY}
+                              width={barWidth}
+                              height={trustBarHeight}
+                              fill="#2563eb"
+                              rx="3"
+                            >
+                              <title>{`Trust-Aware RAG (${item.label}): ${item.trust}%`}</title>
+                            </rect>
+                            <text
+                              x={trustBarX + barWidth / 2}
+                              y={trustBarY - 4}
+                              textAnchor="middle"
+                              fontSize="10"
+                              fontWeight="700"
+                              fill="#1d4ed8"
+                            >
+                              {item.trust}%
+                            </text>
+
+                            {/* X-Axis Category Label */}
+                            <text
+                              x={groupCenterX}
+                              y={chartBottom + 20}
+                              textAnchor="middle"
+                              fontSize="12"
+                              fontWeight={item.isOverall ? "700" : "600"}
+                              fill={item.isOverall ? "#1e40af" : "#374151"}
+                            >
+                              {item.label}
+                            </text>
+                          </g>
+                        );
+                      })}
+                    </svg>
+                  );
+                })()}
+              </div>
+            </div>
+          </section>
+
           {/* OVERALL COMPARISON TABLE (SECTION 12) */}
           <section className="eval-section-card" style={{ marginBottom: "26px" }}>
             <div className="eval-section-header">

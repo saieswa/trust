@@ -302,6 +302,9 @@ export default function Home() {
   const [uploading, setUploading] = useState(false);
   const [uploadStatus, setUploadStatus] = useState("");
 
+  // Indexing job progress state
+  const [uploadJob, setUploadJob] = useState(null); // { job_id, stage, progress_pct, chunks_done, chunks_total, status, error }
+
   const [question, setQuestion] = useState("");
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
@@ -383,29 +386,106 @@ export default function Home() {
       return;
     }
     setUploading(true);
-    setUploadStatus("");
+    setUploadStatus("Uploading file…");
+    setUploadJob(null);
+
+    let jobId = null;
+    let documentId = null;
+    let docFilename = file.name;
+
+    // ── Phase 1: POST the file — returns immediately with job_id ──────────
     try {
+      const controller = new AbortController();
+      // 10-minute timeout for the file upload itself (handles very large files on slow connections)
+      const uploadTimer = setTimeout(() => controller.abort(), 10 * 60 * 1000);
       const body = new FormData();
       body.append("file", file);
-      const response = await fetch(`${API_URL}/api/upload`, { method: "POST", body });
+      let response;
+      try {
+        response = await fetch(`${API_URL}/api/upload`, {
+          method: "POST",
+          body,
+          signal: controller.signal,
+        });
+      } finally {
+        clearTimeout(uploadTimer);
+      }
       const payload = await response.json();
       if (!response.ok) throw new Error(payload.detail ?? "Upload failed.");
 
-      const newDoc = {
-        document_id: payload.document_id,
-        filename: payload.filename ?? file.name,
-      };
+      jobId = payload.job_id;
+      documentId = payload.document_id;
+      docFilename = payload.filename ?? file.name;
 
-      const updated = [...documents.filter((d) => d.document_id !== newDoc.document_id), newDoc];
+      // Register document in the list immediately (even before indexing completes)
+      const newDoc = { document_id: documentId, filename: docFilename, indexing: true };
+      const updated = [...documents.filter((d) => d.document_id !== documentId), newDoc];
       saveDocuments(updated);
-      setSelectedDocumentId(newDoc.document_id);
+      setSelectedDocumentId(documentId);
       setFile(null);
-      setUploadStatus("Document uploaded successfully and indexed in FAISS.");
+      setUploadStatus("File uploaded — indexing in background…");
+      setUploadJob({ job_id: jobId, stage: "Queued", progress_pct: 5, chunks_done: 0, chunks_total: 0, status: "indexing", error: null });
     } catch (err) {
       setUploadStatus(requestError(err, "Failed to upload document."));
-    } finally {
       setUploading(false);
+      return;
     }
+
+    // ── Phase 2: Poll /api/upload/status/{job_id} every 2 seconds ─────────
+    const pollInterval = setInterval(async () => {
+      try {
+        const res = await fetch(`${API_URL}/api/upload/status/${jobId}`);
+        if (!res.ok) {
+          // 404 means server restarted — treat as lost
+          if (res.status === 404) {
+            clearInterval(pollInterval);
+            setUploading(false);
+            setUploadJob((j) => ({ ...j, status: "failed", stage: "Failed", error: "Indexing job not found — the server may have restarted. The file was uploaded but indexing could not be confirmed." }));
+            setUploadStatus("⚠️ Indexing job lost. The file was uploaded but the server restarted before indexing completed.");
+          }
+          return;
+        }
+        const job = await res.json();
+        setUploadJob(job);
+
+        if (job.status === "completed") {
+          clearInterval(pollInterval);
+          setUploading(false);
+          // Mark document as fully indexed
+          setDocuments((prev) =>
+            prev.map((d) => d.document_id === documentId ? { ...d, indexing: false } : d)
+          );
+          try {
+            const saved = localStorage.getItem("trust_aware_docs");
+            if (saved) {
+              const parsed = JSON.parse(saved);
+              const updated = parsed.map((d) => d.document_id === documentId ? { ...d, indexing: false } : d);
+              localStorage.setItem("trust_aware_docs", JSON.stringify(updated));
+            }
+          } catch { /* ignore */ }
+          const chunkMsg = job.chunks_total > 0 ? ` (${job.chunks_total} chunks indexed)` : "";
+          setUploadStatus(`✅ Document indexed successfully${chunkMsg}. Ready to query.`);
+        } else if (job.status === "failed") {
+          clearInterval(pollInterval);
+          setUploading(false);
+          const errDetail = job.error || "Indexing failed — check server logs for details.";
+          setUploadStatus(`❌ Indexing failed: ${errDetail}`);
+          // Remove document from list if indexing failed
+          setDocuments((prev) => prev.filter((d) => d.document_id !== documentId));
+          try {
+            const saved = localStorage.getItem("trust_aware_docs");
+            if (saved) {
+              const parsed = JSON.parse(saved);
+              localStorage.setItem("trust_aware_docs", JSON.stringify(parsed.filter((d) => d.document_id !== documentId)));
+            }
+          } catch { /* ignore */ }
+          setSelectedDocumentId("");
+        }
+      } catch (pollErr) {
+        // Transient poll error — keep polling, don't stop
+        console.warn("[poll] status check failed:", pollErr.message);
+      }
+    }, 2000);
   }
 
   async function handleSendMessage(event, overrideQuery = null) {
@@ -1157,8 +1237,45 @@ export default function Home() {
                     </div>
                   </label>
 
+                  {/* PROGRESS / STATUS WIDGET */}
+                  {uploadJob && uploadJob.status === "indexing" && (
+                    <div style={{ marginTop: "16px", padding: "14px 16px", background: "var(--bg-subtle)", borderRadius: "10px", border: "1px solid var(--line)" }}>
+                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "8px" }}>
+                        <span style={{ fontSize: "12.5px", fontWeight: "600", color: "var(--navy-700)" }}>
+                          ⚙️ {uploadJob.stage || "Processing"}
+                        </span>
+                        <span style={{ fontSize: "12px", color: "var(--navy-500)" }}>
+                          {uploadJob.progress_pct}%
+                          {uploadJob.chunks_total > 0 && ` · ${uploadJob.chunks_done}/${uploadJob.chunks_total} chunks`}
+                        </span>
+                      </div>
+                      <div style={{ height: "6px", background: "var(--line)", borderRadius: "99px", overflow: "hidden" }}>
+                        <div style={{
+                          height: "100%",
+                          width: `${uploadJob.progress_pct}%`,
+                          background: "linear-gradient(90deg, var(--primary), var(--primary-light, #60a5fa))",
+                          borderRadius: "99px",
+                          transition: "width 0.4s ease",
+                        }} />
+                      </div>
+                      <div style={{ marginTop: "6px", fontSize: "11.5px", color: "var(--navy-500)" }}>
+                        Large documents are indexed in batches — the page won't freeze.
+                      </div>
+                    </div>
+                  )}
+
                   <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginTop: "16px" }}>
-                    <span style={{ fontSize: "13px", color: uploadStatus.includes("failed") || uploadStatus.includes("Error") ? "var(--trust-low)" : "var(--trust-high)", fontWeight: "500" }}>
+                    <span style={{
+                      fontSize: "13px",
+                      color: uploadStatus.includes("❌") || uploadStatus.includes("failed") || uploadStatus.includes("Error")
+                        ? "var(--trust-low)"
+                        : uploadStatus.includes("✅")
+                          ? "var(--trust-high)"
+                          : "var(--navy-600)",
+                      fontWeight: "500",
+                      flex: 1,
+                      paddingRight: "12px",
+                    }}>
                       {uploadStatus}
                     </span>
                     <button
@@ -1166,11 +1283,16 @@ export default function Home() {
                       className="btn-primary"
                       disabled={!file || uploading}
                     >
-                      {uploading ? "Indexing in FAISS..." : "Upload & Index Document"}
+                      {uploading && uploadJob?.status === "indexing"
+                        ? `⚙️ Indexing… (${uploadJob.progress_pct ?? 0}%)`
+                        : uploading
+                          ? "📤 Uploading…"
+                          : "Upload & Index Document"}
                     </button>
                   </div>
                 </form>
               </div>
+
 
               {/* DOCUMENTS LIST */}
               <div>
@@ -1200,7 +1322,10 @@ export default function Home() {
                           </div>
 
                           <div className="doc-card-bottom">
-                            <span className="badge-pill badge-ready">Ready</span>
+                            {doc.indexing
+                              ? <span className="badge-pill" style={{ background: "var(--primary-muted, #dbeafe)", color: "var(--primary, #3b82f6)", fontSize: "10.5px" }}>⚙️ Indexing…</span>
+                              : <span className="badge-pill badge-ready">Ready</span>
+                            }
                             <div style={{ display: "flex", gap: "8px" }}>
                               <button
                                 type="button"

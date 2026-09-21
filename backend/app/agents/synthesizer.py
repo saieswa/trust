@@ -12,6 +12,7 @@ import logging
 import re
 from typing import Any, Mapping, Sequence
 
+from app.agents.contradiction_detector import classify_chunk_authority
 from app.llm.groq_client import GroqClientError, GroqLLMClient, get_groq_client, sanitize_answer
 
 logger = logging.getLogger(__name__)
@@ -34,6 +35,11 @@ STRICT INSTRUCTIONS & REQUIREMENTS:
 10. Do NOT mention the retrieval or evaluation process unless specifically asked.
 11. Prefer a clear, concise, well-structured explanation over blindly reproducing raw evidence.
 12. Ensure the final answer is grammatically complete and coherent.
+13. SOURCE HIERARCHY & CONFLICT RESOLUTION:
+    - When AUTHORITATIVE REFERENCE evidence conflicts with UNVERIFIED COMMUNITY CLAIMS or common misconceptions:
+      * Prioritize the authoritative reference evidence.
+      * State the factually verified truth directly and explicitly dismiss or refute the unsupported misconception.
+      * NEVER give equal weight to unverified misconceptions or treat them as equally valid alternatives.
 
 STRUCTURE & FORMATTING REQUIREMENTS:
 - Always format the answer with clear markdown headings (###) and bullet points where helpful.
@@ -224,6 +230,11 @@ class SynthesizerAgent:
 
         final_answer = raw_answer or "I don't have enough reliable evidence in the uploaded document to answer this question."
         final_answer = sanitize_answer(final_answer, evidence=valid_evidence)
+
+        logger.info(
+            "Synthesizer Output: '%s' (claims=%d, valid_evidence=%d)",
+            final_answer[:120].replace("\n", " "), len(claims), len(valid_evidence)
+        )
 
         return {
             "answer": final_answer,
@@ -544,14 +555,18 @@ class SynthesizerAgent:
             if raw_cid:
                 short_to_real_id[raw_cid] = raw_cid
 
+            auth_status = classify_chunk_authority(c)
             entry = {
                 "chunk_id": clean_cid,
+                "source_authority": "AUTHORITATIVE_REFERENCE" if auth_status == "authoritative" else ("UNVERIFIED_COMMUNITY_CLAIM" if auth_status == "unverified" else "NEUTRAL"),
                 "page_number": c.get("page_number"),
                 "filename": c.get("filename"),
                 "source": c.get("source"),
                 "text": c.get("text", ""),
             }
-            if c.get("has_contradiction"):
+            if auth_status == "unverified":
+                entry["NOTE"] = "UNVERIFIED COMMUNITY CLAIM / POPULAR MISCONCEPTION: Subordinate to authoritative reference evidence. If in conflict with authoritative sources, state the authoritative fact and reject this misconception."
+            elif c.get("has_contradiction"):
                 entry["NOTE"] = f"CONTRADICTION DETECTED: {c.get('contradiction_reason', 'Conflicting evidence observed.')}"
             evidence_payload.append(entry)
 
@@ -610,32 +625,57 @@ class SynthesizerAgent:
 
         # Deterministic fallback when LLM is unavailable / rate-limited:
         # Extract complete, grammatical sentences matching the question keywords.
-        # NEVER return a sliced character fragment prefixed with 'Answer grounded on evidence:'.
+        # CRITICAL: Filter out "Common Belief (Unverified)" / misconception chunks.
+        # NEVER expose raw misconception text as the synthesized answer.
         q_lower = question.lower()
         q_keywords = [
             w for w in re.findall(r"\w+", q_lower)
             if len(w) > 2 and w not in ("what", "when", "where", "which", "does", "have", "with", "this", "that", "from", "your", "explain")
         ]
 
-        candidate_sentences: list[tuple[str, str]] = []
-        for chunk in valid_evidence:
+        UNVERIFIED_MARKERS = ("common belief", "unverified", "misconception", "incorrect belief", "common but incorrect")
+
+        def _is_authoritative(chunk: dict) -> bool:
+            src = (chunk.get("source") or chunk.get("filename") or "").lower()
+            text = chunk.get("text", "").lower()
+            return not any(m in src for m in UNVERIFIED_MARKERS) and not any(m in text[:60] for m in UNVERIFIED_MARKERS)
+
+        authoritative_chunks = [c for c in valid_evidence if _is_authoritative(c)]
+        # Only use unverified chunks if no authoritative chunks available (edge case)
+        search_chunks = authoritative_chunks if authoritative_chunks else valid_evidence
+
+        candidate_sentences: list[tuple[str, str, bool]] = []
+        for chunk in search_chunks:
             cid = str(chunk.get("chunk_id", ""))
             c_text = chunk.get("text", "")
+            is_auth = _is_authoritative(chunk)
             # Split into complete sentences
             sents = [s.strip() for s in re.split(r"(?<=[.!?])\s+", c_text) if len(s.strip()) > 20]
             for s in sents:
+                # Skip sentences that start with misconception markers
                 s_lower = s.lower()
+                if any(m in s_lower[:80] for m in UNVERIFIED_MARKERS):
+                    continue
                 matches = sum(1 for kw in q_keywords if kw in s_lower)
                 if matches > 0:
-                    candidate_sentences.append((s, cid))
+                    candidate_sentences.append((s, cid, is_auth))
 
         if not candidate_sentences:
+            # If no matching sentences found, use first authoritative chunk's full text
+            if authoritative_chunks:
+                fallback_text = authoritative_chunks[0].get("text", "")
+                cid = str(authoritative_chunks[0].get("chunk_id", ""))
+                return {
+                    "answer": fallback_text,
+                    "claims": [{"claim_id": "claim-1", "text": fallback_text, "cited_chunk_ids": [cid]}],
+                }
             return {
                 "answer": "I could not find enough information in the uploaded document to provide a reliable answer.",
                 "claims": [],
             }
 
-        selected = candidate_sentences[:3]
+        # Prefer authoritative sentences, limit to 3
+        selected = sorted(candidate_sentences, key=lambda x: (not x[2], 0))[:3]
         clean_answer = " ".join(s[0] for s in selected)
         claims = [
             {
@@ -649,6 +689,7 @@ class SynthesizerAgent:
             "answer": clean_answer,
             "claims": claims,
         }
+
 
     def _extract_sources(self, evidence: list[dict[str, Any]], document_id: str) -> list[dict[str, Any]]:
         sources: list[dict[str, Any]] = []

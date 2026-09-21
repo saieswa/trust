@@ -12,6 +12,7 @@ import re
 from dataclasses import asdict, dataclass
 from typing import Any, Mapping, Sequence
 
+from app.agents.contradiction_detector import classify_chunk_authority
 from app.llm.groq_client import GroqClientError, GroqLLMClient, get_groq_client
 
 logger = logging.getLogger(__name__)
@@ -20,14 +21,15 @@ VERIFIER_SYSTEM_PROMPT = """You are an expert Verifier Agent in a Trust-Aware RA
 Your mission is to rigorously verify each meaningful claim in the generated answer against ONLY the accepted evidence chunks provided.
 
 STRICT VERIFICATION STANDARDS:
-1. "SUPPORTED": The claim is directly, fully, and factually substantiated by the accepted evidence chunks.
+1. "SUPPORTED": The claim is directly, fully, and factually substantiated by the accepted authoritative evidence chunks.
 2. "PARTIALLY_SUPPORTED": The claim is partially substantiated by the accepted evidence, but contains unverified nuances, extrapolations, or ungrounded details.
-3. "UNSUPPORTED": The claim is not substantiated, lacks evidence in the accepted chunks, hallucinates unstated facts, contradicts the evidence, or relies on external knowledge not present in the current document's accepted evidence.
+3. "UNSUPPORTED": The claim is not substantiated, lacks evidence in authoritative chunks, hallucinates unstated facts, adopts an unverified misconception, contradicts authoritative evidence, or relies on external knowledge not present in the current document's accepted evidence.
 
 STRICT RULES:
 - Do NOT use outside, general, or pre-trained knowledge as evidence.
 - A claim must be marked "UNSUPPORTED" if the provided accepted evidence chunks do not directly state it, even if the claim is true in the real world.
 - Evidence from other documents CANNOT support claims for the current document.
+- SOURCE AUTHORITY: Claims MUST align with AUTHORITATIVE REFERENCE evidence. If a claim asserts an unverified misconception or adopts an unverified community claim that contradicts an authoritative reference source, it MUST be marked "UNSUPPORTED".
 - For each claim, return whether it is supported (true only if SUPPORTED), its status, supporting chunk IDs, and a concise explanation.
 
 You must return ONLY valid JSON matching this schema:
@@ -349,6 +351,11 @@ class VerifierAgent:
                 banner += f"> - **\"{fc['claim']}\"** [{fc['status']}]: {fc['explanation']}\n"
             annotated_answer = answer_text + banner
 
+        logger.info(
+            "Verifier Result: status=%s, score=%.3f, supported=%d, unsupported=%d, revised_trust=%.3f",
+            overall_status, verification_score, supported_count, unsupported_count, revised_trust
+        )
+
         return {
             "status": overall_status,
             "verification_score": verification_score,
@@ -508,10 +515,18 @@ class VerifierAgent:
         question: str,
     ) -> list[dict[str, Any]]:
         """Call Groq LLM to verify claims."""
-        evidence_payload = [
-            {"chunk_id": cid, "text": c.get("text", "")}
-            for cid, c in chunk_map.items()
-        ]
+        evidence_payload = []
+        for cid, c in chunk_map.items():
+            auth = classify_chunk_authority(c)
+            entry = {
+                "chunk_id": cid,
+                "source_authority": "AUTHORITATIVE_REFERENCE" if auth == "authoritative" else ("UNVERIFIED_COMMUNITY_CLAIM" if auth == "unverified" else "NEUTRAL"),
+                "source": c.get("source") or c.get("filename"),
+                "text": c.get("text", ""),
+            }
+            if auth == "unverified":
+                entry["NOTE"] = "UNVERIFIED COMMUNITY CLAIM: Claims asserting this misconception over authoritative facts must be marked UNSUPPORTED."
+            evidence_payload.append(entry)
         claims_payload = [
             {
                 "claim_id": c.get("claim_id"),

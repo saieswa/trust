@@ -16,9 +16,12 @@ Determines the deterministic action to take based on the Trust Score:
 
 from __future__ import annotations
 
+import logging
 from dataclasses import dataclass
 from enum import Enum
 from typing import Any
+
+logger = logging.getLogger(__name__)
 
 from app.trust.trust_model import (
     DEFAULT_CONFIGURABLE_HIGH_THRESHOLD,
@@ -105,12 +108,12 @@ def make_trust_decision(
     )
     can_retry = attempts < max_attempts
 
-    # 1. Check for fatal cross-chunk contradictions
+    # 1. Check for fatal cross-chunk contradictions (unresolved conflict between authoritative sources)
     if factors.contradicting_chunks > 0:
-        return TrustDecision(
+        decision = TrustDecision(
             action=ActionType.ABSTAIN,
             decision="ABSTAIN",
-            reason=f"Abstaining to prevent hallucination: {factors.contradicting_chunks} cross-chunk factual contradiction(s) detected.",
+            reason=f"Abstaining to prevent hallucination: {factors.contradicting_chunks} fatal cross-chunk contradiction(s) detected between authoritative sources.",
             trust_score=score,
             trust_level="LOW_TRUST",
             can_retry=False,
@@ -119,10 +122,12 @@ def make_trust_decision(
             high_threshold=high_threshold,
             low_threshold=low_threshold,
         )
+        logger.info("Trust Decision: %s (Score=%.3f, Reason=%s)", decision.decision, score, decision.reason)
+        return decision
 
     # 2. Check for all unrelated documents
     if factors.total_chunks > 0 and factors.unrelated_chunks == factors.total_chunks:
-        return TrustDecision(
+        decision = TrustDecision(
             action=ActionType.ABSTAIN,
             decision="ABSTAIN",
             reason="Abstaining: All retrieved evidence chunks belonged to unrelated documents. Cross-document leakage prohibited.",
@@ -134,13 +139,15 @@ def make_trust_decision(
             high_threshold=high_threshold,
             low_threshold=low_threshold,
         )
+        logger.info("Trust Decision: %s (Score=%.3f, Reason=%s)", decision.decision, score, decision.reason)
+        return decision
 
     # 3. HIGH TRUST: trust_score >= high_threshold (default >= 0.75)
     if score >= high_threshold and factors.supporting_chunks >= 1:
-        return TrustDecision(
+        decision = TrustDecision(
             action=ActionType.DIRECT_ANSWER,
             decision="CONTINUE_TO_SYNTHESIZER",
-            reason=f"High trust ({score:.1%}): {factors.relevant_chunks} relevant chunk(s) verified with high quality and no contradictions. Continuing to Synthesizer.",
+            reason=f"High trust ({score:.1%}): {factors.relevant_chunks} relevant chunk(s) verified with high quality and no fatal contradictions. Continuing to Synthesizer.",
             trust_score=score,
             trust_level="HIGH_TRUST",
             can_retry=False,
@@ -148,11 +155,13 @@ def make_trust_decision(
             high_threshold=high_threshold,
             low_threshold=low_threshold,
         )
+        logger.info("Trust Decision: %s (Score=%.3f, Reason=%s)", decision.decision, score, decision.reason)
+        return decision
 
     # 4. MEDIUM TRUST: low_threshold <= trust_score < high_threshold (default 0.50 <= score < 0.75)
     if score >= low_threshold:
         if can_retry:
-            return TrustDecision(
+            decision = TrustDecision(
                 action=ActionType.RETRIEVE_MORE,
                 decision="RETRIEVE_MORE",
                 reason=f"Medium trust ({score:.1%}): Attempt {attempts}/{max_attempts}. Retrieving additional evidence to strengthen confidence.",
@@ -163,23 +172,38 @@ def make_trust_decision(
                 high_threshold=high_threshold,
                 low_threshold=low_threshold,
             )
-        # If retries are exhausted or maximum attempts reached -> abstain
-        return TrustDecision(
-            action=ActionType.ABSTAIN,
-            decision="ABSTAIN",
-            reason=f"Abstaining: Medium trust ({score:.1%}) remained insufficient after {attempts} retrieval iteration(s).",
-            trust_score=score,
-            trust_level="MODERATE_TRUST",
-            can_retry=False,
-            number_of_retrieval_attempts=attempts,
-            abstention_reason=AbstentionReason.INSUFFICIENT_EVIDENCE,
-            high_threshold=high_threshold,
-            low_threshold=low_threshold,
-        )
+        elif factors.supporting_chunks >= 1 and factors.relevant_chunks >= 1:
+            # When retry is exhausted or single-pass but verified supporting evidence exists
+            decision = TrustDecision(
+                action=ActionType.DIRECT_ANSWER,
+                decision="CONTINUE_TO_SYNTHESIZER",
+                reason=f"Moderate trust ({score:.1%}): Supported by {factors.supporting_chunks} verified chunk(s). Continuing to Synthesizer with calibrated confidence.",
+                trust_score=score,
+                trust_level="MODERATE_TRUST",
+                can_retry=False,
+                number_of_retrieval_attempts=attempts,
+                high_threshold=high_threshold,
+                low_threshold=low_threshold,
+            )
+        else:
+            # If retries are exhausted and no supporting evidence -> abstain
+            decision = TrustDecision(
+                action=ActionType.ABSTAIN,
+                decision="ABSTAIN",
+                reason=f"Abstaining: Medium trust ({score:.1%}) lacked sufficient supporting evidence after {attempts} retrieval iteration(s).",
+                trust_score=score,
+                trust_level="MODERATE_TRUST",
+                can_retry=False,
+                number_of_retrieval_attempts=attempts,
+                abstention_reason=AbstentionReason.INSUFFICIENT_EVIDENCE,
+                high_threshold=high_threshold,
+                low_threshold=low_threshold,
+            )
+        logger.info("Trust Decision: %s (Score=%.3f, Reason=%s)", decision.decision, score, decision.reason)
+        return decision
 
     # 5. LOW TRUST: trust_score < low_threshold (default < 0.50)
-    # Do not generate a confident answer; return an abstention response
-    return TrustDecision(
+    decision = TrustDecision(
         action=ActionType.ABSTAIN,
         decision="ABSTAIN",
         reason="I don't have enough reliable evidence in the uploaded document to answer this question.",
@@ -191,3 +215,5 @@ def make_trust_decision(
         high_threshold=high_threshold,
         low_threshold=low_threshold,
     )
+    logger.info("Trust Decision: %s (Score=%.3f, Reason=%s)", decision.decision, score, decision.reason)
+    return decision

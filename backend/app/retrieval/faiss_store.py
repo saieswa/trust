@@ -203,6 +203,76 @@ class FAISSStore:
 		self._save()
 		return len(new_chunks)
 
+	def add_chunks_batched(
+		self,
+		chunks: Sequence[Chunk],
+		batch_size: int = 64,
+	):
+		"""Embed and index chunks in batches, persisting after every batch.
+
+		This keeps RAM usage bounded for large documents (300+ pages) and
+		ensures partial progress is never lost if an error occurs mid-way.
+
+		Args:
+			chunks: All chunks to embed and index.
+			batch_size: Number of chunks per embedding + FAISS add call (default 64).
+
+		Yields:
+			Tuple[int, int]: (chunks_done_so_far, total_chunks) after each batch.
+		"""
+		if not chunks:
+			return
+
+		existing_ids = {record["chunk_id"] for record in self._metadata}
+		new_chunks = [c for c in chunks if c.chunk_id not in existing_ids]
+		total = len(new_chunks)
+		if total == 0:
+			return
+
+		batch_size = max(1, batch_size)
+		done = 0
+
+		if self._index is None:
+			self._index = self._new_index()
+
+		for start in range(0, total, batch_size):
+			batch = new_chunks[start : start + batch_size]
+			vectors = self.embedding_model.embed_chunks(batch)
+
+			if vectors.ndim != 2 or vectors.shape[1] != self.dimension:
+				raise FAISSStoreError(
+					f"Embedding dimension mismatch in batch starting at {start}"
+				)
+
+			norms = np.linalg.norm(vectors, axis=1, keepdims=True)
+			zero_mask = norms.flatten() == 0
+			if zero_mask.any():
+				# Replace zero-norm vectors with unit vectors to avoid divide-by-zero
+				vectors[zero_mask] = np.zeros(self.dimension, dtype=np.float32)
+				vectors[zero_mask, 0] = 1.0
+				norms = np.where(norms == 0, 1.0, norms)
+			vectors = vectors / norms
+
+			self._index.add(np.ascontiguousarray(vectors, dtype=np.float32))
+			self._metadata.extend(
+				{
+					"document_id": chunk.document_id,
+					"chunk_id": chunk.chunk_id,
+					"filename": chunk.filename,
+					"page_number": chunk.page_number,
+					"text": chunk.text,
+					"source": chunk.source,
+				}
+				for chunk in batch
+			)
+			# Persist after every batch so progress survives errors
+			self._save()
+			done += len(batch)
+			logger.info("[FAISS] batched add: %d/%d chunks indexed", done, total)
+			yield done, total
+
+
+
 	def search(
 		self,
 		query: str | np.ndarray,

@@ -17,6 +17,7 @@ from __future__ import annotations
 
 import csv
 import json
+import logging
 import os
 import shutil
 import tempfile
@@ -26,6 +27,8 @@ from pathlib import Path
 from typing import Any, Callable, Dict, List, Optional
 
 import numpy as np
+
+logger = logging.getLogger(__name__)
 
 from app.embeddings.embedding_model import get_embedding_model
 from app.ingestion.chunker import Chunk
@@ -206,6 +209,7 @@ def run_single_case(
                         document_id=item.id,
                         evaluations=critic_evals,
                         contradictions=contradictions,
+                        trust_decision=decision,
                     )
                     raw_draft = synth_res.get("answer") or synth_res.get("draft_answer") or ""
                     v_res = verifier.verify(
@@ -213,6 +217,7 @@ def run_single_case(
                         accepted_evidence=retrieved_chunks,
                         document_id=item.id,
                         question=item.question,
+                        trust_score=trust_score,
                     )
                     trust_answer = sanitize_answer(v_res.get("final_answer") or raw_draft, evidence=retrieved_chunks)
                     verification_status = v_res.get("verification_status", "VERIFIED")
@@ -226,10 +231,12 @@ def run_single_case(
                         accepted_evidence=retrieved_chunks,
                         document_id=item.id,
                         question=item.question,
+                        trust_score=trust_score,
                     )
                     verification_status = v_res.get("verification_status", "VERIFIED")
                     trust_hallucination_ratio = float(v_res.get("hallucination_ratio", 0.0))
             except Exception as e:
+                logger.warning("Synthesis/Verification exception for %s: %s", item.id, e)
                 trust_answer = sanitize_answer(normal_answer, evidence=retrieved_chunks)
 
         trust_latency = round((time.perf_counter() - t_start) * 1000, 2)
@@ -304,7 +311,11 @@ def run_single_case(
             record["trust_correct"] = (trust_pred == gold_lbl)
 
         elif item.dataset == "TruthfulQA":
-            tqa_normal = evaluate_truthfulqa_case(normal_answer, item.metadata)
+            # Enrich metadata with ground_truth so evaluator can use it correctly
+            tqa_meta = dict(item.metadata)
+            tqa_meta["ground_truth"] = item.ground_truth
+
+            tqa_normal = evaluate_truthfulqa_case(normal_answer, tqa_meta)
             record["normal_correct"] = tqa_normal["is_truthful"]
             record["normal_hallucinated"] = tqa_normal["is_hallucinated"]
             record["normal_f1"] = tqa_normal["true_f1"]
@@ -321,7 +332,7 @@ def run_single_case(
                 record["trust_abstained_on_answerable"] = True  # will be reviewed in aggregation
                 record["trust_answered"] = False
             else:
-                tqa_trust = evaluate_truthfulqa_case(trust_answer, item.metadata)
+                tqa_trust = evaluate_truthfulqa_case(trust_answer, tqa_meta)
                 record["trust_correct"] = tqa_trust["is_truthful"]
                 record["trust_hallucinated"] = tqa_trust["is_hallucinated"]
                 record["trust_f1"] = tqa_trust["true_f1"]
@@ -342,8 +353,12 @@ def run_single_case(
                 he_trust = evaluate_halueval_case(trust_answer, item.ground_truth, item.metadata)
                 record["trust_correct"] = he_trust["is_correct"]
                 record["trust_hallucinated"] = he_trust["is_hallucinated"]
-                record["trust_f1"] = he_trust["right_f1"]
-
+        logger.info(
+            "[%s] Case %s: Normal(correct=%s, f1=%.2f) vs Trust(correct=%s, f1=%.2f, score=%.3f, decision=%s, abstained=%s, verif=%s)",
+            item.dataset, item.id, record["normal_correct"], record["normal_f1"],
+            record["trust_correct"], record["trust_f1"], record["trust_score"],
+            decision.decision, record["trust_abstained"], record["verification_status"]
+        )
         return record
 
     finally:

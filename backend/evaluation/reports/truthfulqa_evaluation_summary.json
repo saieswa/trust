@@ -1,0 +1,17 @@
+{
+  "dataset": "TruthfulQA",
+  "sample_count": 25,
+  "normal_rag": {
+    "accuracy": 64.0,
+    "hallucination_rate": 32.0,
+    "abstention_rate": 0.0,
+    "latency_ms": 175.0
+  },
+  "trust_aware": {
+    "accuracy": 36.0,
+    "hallucination_rate": 16.0,
+    "abstention_rate": 36.0,
+    "mean_trust_score": 0.612,
+    "latency_ms": 2542.7
+  }
+}

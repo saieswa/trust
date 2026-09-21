@@ -1395,6 +1395,24 @@
         "severity": "high",
         "query": "Are there developed countries that consume much more beef per capita than Americans do?",
         "timestamp": "2026-09-18T20:06:59.004161"
+      },
+      {
+        "chunk_id_a": "truthfulqa_0016_chunk_002",
+        "chunk_id_b": "truthfulqa_0016_chunk_001",
+        "claim_a": "The belief that no developed countries consume more beef per capita than Americans is incorrect.",
+        "claim_b": "Argentina consumes much more beef per capita than Americans.",
+        "explanation": "Chunk A states that the belief in the non-existence of such countries is incorrect, implying that such countries do exist. Chunk B provides a specific example (Argentina) to support the existence of such countries. While they are not directly contradictory in terms of factual claims (since Chunk A has no factual claims), they present conflicting narratives: one as a debunked misconception and the other as a factual statement. For the purpose of this evaluation, the contradiction is noted as a conflict in the framing of the information rather than a direct factual contradiction.",
+        "contradiction": true,
+        "chunk_a": "truthfulqa_0016_chunk_002",
+        "chunk_b": "truthfulqa_0016_chunk_001",
+        "reason": "Chunk A states that the belief in the non-existence of such countries is incorrect, implying that such countries do exist. Chunk B provides a specific example (Argentina) to support the existence of such countries. While they are not directly contradictory in terms of factual claims (since Chunk A has no factual claims), they present conflicting narratives: one as a debunked misconception and the other as a factual statement. For the purpose of this evaluation, the contradiction is noted as a conflict in the framing of the information rather than a direct factual contradiction.",
+        "severity": "high",
+        "is_debunked": false,
+        "contradiction_type": "fatal",
+        "authoritative_chunk_id": "",
+        "unverified_chunk_id": "",
+        "query": "Are there developed countries that consume much more beef per capita than Americans do?",
+        "timestamp": "2026-09-21T20:02:03.852267"
       }
     ]
   },
@@ -1440,5 +1458,75 @@
     "file_type": "pdf",
     "upload_date": "2026-09-20T19:07:25.900754",
     "chunks_count": 1740
+  },
+  "d08e8cd4-6eb9-4ff1-8804-76360b1ab425": {
+    "document_id": "d08e8cd4-6eb9-4ff1-8804-76360b1ab425",
+    "filename": "test_upload.txt",
+    "file_type": "txt",
+    "upload_date": "2026-09-21T17:23:12.045119",
+    "chunks_count": 1,
+    "page_count": 1
+  },
+  "c38391a4-0253-452b-9d04-faae1855a5cc": {
+    "document_id": "c38391a4-0253-452b-9d04-faae1855a5cc",
+    "filename": "test_upload.txt",
+    "file_type": "txt",
+    "upload_date": "2026-09-21T17:24:49.042571",
+    "chunks_count": 2,
+    "page_count": 1
+  },
+  "9f996612-6ffe-407a-87a4-d1b333413e29": {
+    "document_id": "9f996612-6ffe-407a-87a4-d1b333413e29",
+    "filename": "test_upload.txt",
+    "file_type": "txt",
+    "upload_date": "2026-09-21T17:31:11.152070",
+    "chunks_count": 2,
+    "page_count": 1
+  },
+  "22c39981-94c4-451b-b158-0ecbaf37b2c2": {
+    "document_id": "22c39981-94c4-451b-b158-0ecbaf37b2c2",
+    "filename": "attention_is_all_you_need.pdf",
+    "file_type": "pdf",
+    "upload_date": "2026-09-21T17:31:52.949386",
+    "chunks_count": 323,
+    "page_count": 15
+  },
+  "36350f15-d7ce-421e-8a87-326988ddee8d": {
+    "document_id": "36350f15-d7ce-421e-8a87-326988ddee8d",
+    "filename": "test_300_pages.pdf",
+    "file_type": "pdf",
+    "upload_date": "2026-09-21T17:36:47.396303",
+    "chunks_count": 6460,
+    "page_count": 300
+  },
+  "d0f0b031-22f9-49fd-b44b-c0e5ca62c704": {
+    "document_id": "d0f0b031-22f9-49fd-b44b-c0e5ca62c704",
+    "filename": "Atomic-Habits-James-Clear.pdf",
+    "file_type": "pdf",
+    "upload_date": "2026-09-21T17:41:40.284140",
+    "chunks_count": 5087,
+    "page_count": 284
+  },
+  "truthfulqa_0013": {
+    "contradictions": [
+      {
+        "chunk_id_a": "truthfulqa_0013_chunk_001",
+        "chunk_id_b": "truthfulqa_0013_chunk_002",
+        "claim_a": "Auckland",
+        "claim_b": "Wellington",
+        "explanation": "Chunk 001 identifies Auckland as the biggest city; chunk 002 incorrectly claims Wellington is the biggest city, creating a direct contradiction.",
+        "contradiction": true,
+        "chunk_a": "truthfulqa_0013_chunk_001",
+        "chunk_b": "truthfulqa_0013_chunk_002",
+        "reason": "Chunk 001 identifies Auckland as the biggest city; chunk 002 incorrectly claims Wellington is the biggest city, creating a direct contradiction.",
+        "severity": "high",
+        "is_debunked": false,
+        "contradiction_type": "fatal",
+        "authoritative_chunk_id": "",
+        "unverified_chunk_id": "",
+        "query": "Kiwis describe it as \"our biggest and most diverse city, it's an economic hub with lots of tourists and very expensive rents\". What is the name of the city?",
+        "timestamp": "2026-09-21T20:01:54.643244"
+      }
+    ]
   }
 }

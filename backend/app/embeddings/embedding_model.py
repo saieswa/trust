@@ -114,6 +114,31 @@ class EmbeddingModel:
 			return np.empty((0, self.dimension), dtype=np.float32)
 		return self._encode([chunk.text for chunk in chunks])
 
+	def embed_chunks_batched(
+		self,
+		chunks: Sequence[Chunk],
+		batch_size: int = 64,
+	):
+		"""Yield (vectors_batch, chunk_slice) for each batch of chunks.
+
+		This is a generator so callers can process and persist each batch
+		incrementally without loading the entire embedding matrix into RAM.
+
+		Args:
+			chunks: All chunks to embed.
+			batch_size: Number of chunks per embedding call (default 64).
+
+		Yields:
+			Tuple[np.ndarray, list[Chunk]]: (vectors of shape (N, dim), sub-list of chunks)
+		"""
+		if not chunks:
+			return
+		batch_size = max(1, batch_size)
+		for start in range(0, len(chunks), batch_size):
+			batch = list(chunks[start : start + batch_size])
+			vectors = self._encode([c.text for c in batch])
+			yield vectors, batch
+
 	@lru_cache(maxsize=1024)
 	def _cached_embed_query(self, query: str) -> bytes:
 		vectors = self._encode([query])

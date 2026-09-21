@@ -40,6 +40,14 @@ You must evaluate each chunk independently along these criteria:
 4. contradiction_status: string ("none" if no conflict with other retrieved chunks, or "contradiction_detected: <brief reason>")
 5. explanation: clear, concise explanation of the evaluation decisions (relevance, support, quality, contradiction)
 
+SOURCE TYPE AWARENESS:
+- Chunks with source/filename containing "Reference Knowledge Source" or "authoritative" are HIGH-QUALITY reliable sources. They should receive source_quality="high" and evidence_strength="high" when they provide relevant factual information.
+- Chunks with source/filename containing "Common Belief (Unverified)", "unverified", "misconception", or text starting with "A common but incorrect belief" are LOW-QUALITY UNVERIFIED COMMUNITY CLAIMS. They must receive:
+  * source_quality="low"
+  * evidence_strength="low"
+  * support_status="unsupported" (misconceptions do NOT support factual answers)
+  * If the authoritative chunk contradicts the misconception, mark contradiction_status as "contradiction_detected: authoritative source refutes this common misconception"
+
 Cross-Chunk Contradiction Analysis:
 Compare all relevant retrieved chunks with each other. If two or more chunks make conflicting or mutually incompatible factual claims (e.g. conflicting dates, figures, definitions, names, or outcomes):
 - Mark contradiction_status as "contradiction_detected: <details>" for the conflicting chunks.
@@ -225,6 +233,10 @@ class CriticAgent:
                     c_norm["reason"] = c.get("reason") or c.get("explanation") or "Factual contradiction detected."
                     c_norm["explanation"] = c_norm["reason"]
                     c_norm["severity"] = c.get("severity", "high")
+                    c_norm["is_debunked"] = bool(c.get("is_debunked", False))
+                    c_norm["contradiction_type"] = str(c.get("contradiction_type", "fatal"))
+                    c_norm["authoritative_chunk_id"] = str(c.get("authoritative_chunk_id", ""))
+                    c_norm["unverified_chunk_id"] = str(c.get("unverified_chunk_id", ""))
                     merged_contradictions.append(c_norm)
 
             contradictions = merged_contradictions
@@ -276,8 +288,15 @@ class CriticAgent:
                 for c in contradictions:
                     if cid in (str(c.get("chunk_a")), str(c.get("chunk_b")), str(c.get("chunk_id_a")), str(c.get("chunk_id_b"))):
                         reason_msg = c.get("reason") or c.get("explanation") or "Conflicting claims"
-                        contra_status = f"contradiction_detected: {reason_msg}"
-                        supp = "contradicted"
+                        if c.get("is_debunked") or c.get("contradiction_type") == "unverified_refuted":
+                            if cid == str(c.get("unverified_chunk_id")):
+                                contra_status = f"unverified_claim_refuted: {reason_msg}"
+                                supp = "unsupported"
+                            else:
+                                contra_status = "authoritative_reference_verified"
+                        else:
+                            contra_status = f"contradiction_detected: {reason_msg}"
+                            supp = "contradicted"
 
                 item = {
                     "document_id": doc_id,
@@ -332,6 +351,18 @@ class CriticAgent:
         valid_chunks: list[dict[str, Any]],
     ) -> dict[str, Any]:
         """Invoke Groq/Llama via JSON mode and parse structured evaluation result."""
+        UNVERIFIED_MARKERS_PAY = ("common belief", "unverified", "misconception", "incorrect belief")
+        AUTHORITATIVE_MARKERS_PAY = ("reference knowledge", "authoritative")
+
+        def _source_type_label(chunk: dict) -> str:
+            src = (chunk.get("source") or chunk.get("filename") or "").lower()
+            txt = chunk.get("text", "").lower()[:60]
+            if any(m in src for m in UNVERIFIED_MARKERS_PAY) or any(m in txt for m in UNVERIFIED_MARKERS_PAY):
+                return "UNVERIFIED_COMMON_BELIEF"
+            if any(m in src for m in AUTHORITATIVE_MARKERS_PAY):
+                return "AUTHORITATIVE_REFERENCE"
+            return "GENERAL"
+
         evidence_payload = [
             {
                 "chunk_id": c["chunk_id"],
@@ -339,6 +370,7 @@ class CriticAgent:
                 "filename": c.get("filename"),
                 "page_number": c.get("page_number"),
                 "source": c.get("source"),
+                "source_type": _source_type_label(c),
                 "text": c.get("text", ""),
             }
             for c in valid_chunks
@@ -387,30 +419,56 @@ class CriticAgent:
 
     def _evaluate_deterministic(self, question: str, chunks: Sequence[Mapping[str, Any]]) -> dict[str, Any]:
         """Deterministic evaluation fallback when LLM is unavailable or rate limited."""
+        UNVERIFIED_MARKERS = ("common belief", "unverified", "misconception", "incorrect belief", "common but incorrect")
+        AUTHORITATIVE_MARKERS = ("reference knowledge", "authoritative", "reference knowledge source")
+
         q_words = set(re.findall(r"\b\w{3,}\b", question.lower()))
         evals = []
         for c in chunks:
             cid = str(c.get("chunk_id", ""))
             text = str(c.get("text", ""))
-            src = str(c.get("source") or c.get("filename") or "")
+            src = str(c.get("source") or c.get("filename") or "").lower()
+            text_prefix = text.lower()[:80]
+
+            is_unverified = (
+                any(m in src for m in UNVERIFIED_MARKERS)
+                or any(m in text_prefix for m in UNVERIFIED_MARKERS)
+            )
+            is_authoritative = any(m in src for m in AUTHORITATIVE_MARKERS)
+
             c_words = set(re.findall(r"\b\w{3,}\b", text.lower()))
             overlap = len(q_words & c_words) / max(1, len(q_words))
             rel = (overlap >= 0.15) or (float(c.get("score", 0.0)) >= 0.30)
-            is_unverified = "unverified" in src.lower() or "forum" in src.lower()
+
+            # Unverified/misconception chunks are always unsupported, even if relevant
+            if is_unverified:
+                support = "unsupported"
+                src_quality = "low"
+                ev_strength = "low"
+            else:
+                support = "supported" if rel else "unsupported"
+                src_quality = "high" if is_authoritative else "medium"
+                ev_strength = "high" if (len(text) > 80 and is_authoritative) else ("medium" if len(text) > 40 else "low")
+
             evals.append({
                 "chunk_id": cid,
-                "relevance": rel,
-                "support_status": "supported" if rel else "unsupported",
+                "relevance": rel and not is_unverified,
+                "support_status": support,
                 "quality_assessment": {
-                    "evidence_strength": "high" if len(text) > 80 else "medium",
-                    "source_quality": "low" if is_unverified else "high",
+                    "evidence_strength": ev_strength,
+                    "source_quality": src_quality,
                     "potential_outdated": False,
-                    "details": "Deterministic fallback based on token overlap",
+                    "details": "Deterministic fallback based on token overlap and source type",
                 },
                 "contradiction_status": "none",
-                "explanation": "Deterministic fallback evaluation based on token overlap and metadata.",
+                "explanation": (
+                    "Unverified/common-belief chunk marked as unsupported per source type policy."
+                    if is_unverified else
+                    "Deterministic fallback evaluation based on token overlap and metadata."
+                ),
             })
         return {"evaluations": evals, "contradictions": []}
+
 
 
 def _parse_json_response(raw_content: str) -> dict[str, Any]:

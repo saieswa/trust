@@ -92,6 +92,41 @@ Return ONLY valid JSON matching this schema:
 """
 
 
+UNVERIFIED_SOURCE_KEYWORDS = {
+    "common belief", "unverified", "rumor", "rumour", "forum", "misconception",
+    "popular myth", "incorrect belief", "unverified belief", "community claim",
+    "unverified community post", "unverified post"
+}
+
+
+def classify_chunk_authority(chunk: Mapping[str, Any] | Any) -> str:
+    """Classifies a chunk as 'authoritative', 'unverified', or 'neutral' based on metadata and text."""
+    if hasattr(chunk, "__dict__"):
+        d = dict(chunk.__dict__)
+    elif isinstance(chunk, Mapping):
+        d = dict(chunk)
+    else:
+        d = {"text": str(chunk)}
+
+    source = str(d.get("source") or d.get("filename") or d.get("title") or "").lower()
+    text = str(d.get("text") or "").lower()
+    qa = d.get("quality_assessment") or d.get("quality assessment") or {}
+    src_quality = str(qa.get("source_quality", "")).lower() if isinstance(qa, Mapping) else ""
+
+    # Check unverified markers in source or text
+    for kw in UNVERIFIED_SOURCE_KEYWORDS:
+        if kw in source or (kw in text and ("belief is that" in text or "common but incorrect" in text or "unverified" in text or "rumor" in text)):
+            return "unverified"
+    if src_quality == "low" and ("unverified" in text or "myth" in text or "rumor" in text or "belief" in text):
+        return "unverified"
+
+    # Check authoritative markers
+    if any(auth_kw in source for auth_kw in ("reference", "knowledge", "official", "textbook", "verified", "authority", "document", "wikipedia", "evidence")):
+        return "authoritative"
+
+    return "authoritative" if src_quality in ("high", "medium") else "neutral"
+
+
 @dataclass(frozen=True)
 class ContradictionResult:
     contradiction: bool
@@ -101,6 +136,10 @@ class ContradictionResult:
     severity: str
     claim_a: str = ""
     claim_b: str = ""
+    is_debunked: bool = False
+    contradiction_type: str = "fatal"  # "fatal" | "unverified_refuted" | "neutral"
+    authoritative_chunk_id: str = ""
+    unverified_chunk_id: str = ""
 
     def to_dict(self) -> dict[str, Any]:
         """Return structured dictionary with standard keys and backwards-compatible aliases."""
@@ -109,6 +148,10 @@ class ContradictionResult:
         data["chunk_id_a"] = self.chunk_a
         data["chunk_id_b"] = self.chunk_b
         data["explanation"] = self.reason
+        data["is_debunked"] = self.is_debunked
+        data["contradiction_type"] = self.contradiction_type
+        data["authoritative_chunk_id"] = self.authoritative_chunk_id
+        data["unverified_chunk_id"] = self.unverified_chunk_id
         return data
 
 
@@ -379,7 +422,7 @@ class ContradictionDetector:
         allow_semantic: bool = True,
     ) -> list[dict[str, Any]]:
         """Compare all relevant retrieved chunks pairwise to detect contradictions."""
-        normalized: list[dict[str, str]] = []
+        normalized: list[dict[str, Any]] = []
         for idx, item in enumerate(chunks):
             if hasattr(item, "__dict__"):
                 d = dict(item.__dict__)
@@ -391,12 +434,46 @@ class ContradictionDetector:
             cid = str(d.get("chunk_id") or f"chunk-{idx:04d}")
             text = str(d.get("text") or "").strip()
             if text:
-                normalized.append({"chunk_id": cid, "text": text})
+                d["chunk_id"] = cid
+                d["text"] = text
+                normalized.append(d)
 
         from concurrent.futures import ThreadPoolExecutor
 
         contradictions: list[dict[str, Any]] = []
-        semantic_candidates: list[tuple[dict[str, str], dict[str, str], float]] = []
+        semantic_candidates: list[tuple[dict[str, Any], dict[str, Any], float]] = []
+
+        def _enrich_contradiction(
+            res: ContradictionResult | dict[str, Any],
+            chunk_a_dict: dict[str, Any],
+            chunk_b_dict: dict[str, Any],
+        ) -> dict[str, Any]:
+            c_dict = res.to_dict() if hasattr(res, "to_dict") else dict(res)
+            auth_a = classify_chunk_authority(chunk_a_dict)
+            auth_b = classify_chunk_authority(chunk_b_dict)
+            cid_a = chunk_a_dict["chunk_id"]
+            cid_b = chunk_b_dict["chunk_id"]
+
+            if (auth_a == "authoritative" and auth_b == "unverified") or (auth_b == "authoritative" and auth_a == "unverified"):
+                auth_id = cid_a if auth_a == "authoritative" else cid_b
+                unver_id = cid_b if auth_a == "authoritative" else cid_a
+                c_dict["is_debunked"] = True
+                c_dict["contradiction_type"] = "unverified_refuted"
+                c_dict["severity"] = "low"
+                c_dict["authoritative_chunk_id"] = auth_id
+                c_dict["unverified_chunk_id"] = unver_id
+                logger.info(
+                    "Source-aware contradiction: Authoritative chunk '%s' refutes unverified claim in '%s' (non-fatal)",
+                    auth_id, unver_id
+                )
+            else:
+                c_dict["is_debunked"] = False
+                c_dict["contradiction_type"] = "fatal"
+                logger.info(
+                    "Fatal contradiction detected between chunk '%s' (auth=%s) and chunk '%s' (auth=%s)",
+                    cid_a, auth_a, cid_b, auth_b
+                )
+            return c_dict
 
         # Compare each pair once (i < j)
         for i in range(len(normalized)):
@@ -413,7 +490,7 @@ class ContradictionDetector:
                 )
                 if det is not None:
                     if det.contradiction:
-                        contradictions.append(det.to_dict())
+                        contradictions.append(_enrich_contradiction(det, chunk_i, chunk_j))
                     continue
 
                 # Filter pairs with insufficient entity / content overlap
@@ -432,19 +509,22 @@ class ContradictionDetector:
             semantic_candidates.sort(key=lambda x: x[2], reverse=True)
             top_candidates = semantic_candidates[:2]
 
-            def _evaluate_candidate(cand: tuple[dict[str, str], dict[str, str], float]) -> ContradictionResult:
+            def _evaluate_candidate(cand: tuple[dict[str, Any], dict[str, Any], float]) -> dict[str, Any] | None:
                 ci, cj, _ = cand
-                return self.compare_pair(
+                res = self.compare_pair(
                     chunk_a_id=ci["chunk_id"],
                     chunk_a_text=ci["text"],
                     chunk_b_id=cj["chunk_id"],
                     chunk_b_text=cj["text"],
                 )
+                if res.contradiction:
+                    return _enrich_contradiction(res, ci, cj)
+                return None
 
             with ThreadPoolExecutor(max_workers=min(2, len(top_candidates))) as executor:
-                for res in executor.map(_evaluate_candidate, top_candidates):
-                    if res.contradiction:
-                        contradictions.append(res.to_dict())
+                for enriched in executor.map(_evaluate_candidate, top_candidates):
+                    if enriched is not None:
+                        contradictions.append(enriched)
 
         return contradictions
 

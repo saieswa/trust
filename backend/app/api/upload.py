@@ -11,6 +11,7 @@ DB insert batch:  100 rows per Supabase call.
 """
 
 import asyncio
+import hashlib
 import logging
 import os
 import uuid
@@ -21,7 +22,7 @@ from typing import Optional
 from fastapi import APIRouter, BackgroundTasks, File, HTTPException, UploadFile, status
 from pydantic import BaseModel, Field
 
-from app.database.metadata import save_document_metadata
+from app.database.metadata import get_document_by_sha256, save_document_metadata
 from app.database.supabase import SupabaseDatabaseError, get_database
 from app.embeddings.embedding_model import EmbeddingError
 from app.ingestion.chunker import ChunkingError, chunk_document
@@ -73,7 +74,14 @@ def get_vector_store() -> FAISSStore:
 # Background indexing task
 # ---------------------------------------------------------------------------
 
-def _run_indexing(job_id: str, file_path: str, document_id: str, filename: str, ext: str) -> None:
+def _run_indexing(
+    job_id: str,
+    file_path: str,
+    document_id: str,
+    filename: str,
+    ext: str,
+    file_sha256: str = "",
+) -> None:
     """CPU-bound indexing pipeline — runs in the thread executor."""
     job = _job_store[job_id]
 
@@ -145,10 +153,12 @@ def _run_indexing(job_id: str, file_path: str, document_id: str, filename: str, 
                 {
                     "document_id": document_id,
                     "filename": filename,
+                    "sha256": file_sha256,
                     "file_type": ext,
                     "upload_date": datetime.utcnow().isoformat(),
                     "chunks_count": total_chunks,
                     "page_count": extracted.page_count,
+                    "status": "completed",
                 },
             )
         except Exception as save_err:
@@ -288,6 +298,7 @@ async def upload_document(file: UploadFile = File(...)):
         os.makedirs(uploads_dir, exist_ok=True)
         total_bytes = 0
         read_chunk_size = 1024 * 1024  # 1 MB read buffer
+        hasher = hashlib.sha256()
         with open(file_path, "wb") as buf:
             while True:
                 data = await file.read(read_chunk_size)
@@ -300,11 +311,12 @@ async def upload_document(file: UploadFile = File(...)):
                     raise HTTPException(
                         status_code=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE,
                         detail=(
-                            f"File exceeds the maximum allowed size of {_env_max_mb} MB. "
+                            f"File exceeds maximum allowed size of {_env_max_mb} MB. "
                             f"Set MAX_FILE_SIZE_MB env var to increase the limit."
                         ),
                     )
                 buf.write(data)
+                hasher.update(data)
     except HTTPException:
         raise
     except Exception as e:
@@ -312,12 +324,60 @@ async def upload_document(file: UploadFile = File(...)):
         _cleanup_file(file_path)
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Could not save uploaded file.")
 
+    file_sha256 = hasher.hexdigest()
     logger.info(
-        "[UPLOAD] file saved: document_id=%s filename=%s size_bytes=%d",
-        document_id, clean_filename, total_bytes,
+        "[UPLOAD] file saved: document_id=%s filename=%s size_bytes=%d sha256=%s",
+        document_id, clean_filename, total_bytes, file_sha256,
     )
 
-    # ── 4. Register job ───────────────────────────────────────────────────
+    # ── 4. SHA-256 Duplicate Check ─────────────────────────────────────────
+    existing_doc = get_document_by_sha256(file_sha256)
+    if existing_doc and existing_doc.get("chunks_count", 0) > 0:
+        existing_doc_id = existing_doc["document_id"]
+        # Duplicate document found! Clean up the newly uploaded redundant file
+        _cleanup_file(file_path)
+
+        # Register completed job in _job_store
+        _job_store[job_id] = {
+            "job_id": job_id,
+            "document_id": existing_doc_id,
+            "filename": existing_doc.get("filename", clean_filename),
+            "status": "completed",
+            "stage": "Completed",
+            "progress_pct": 100,
+            "chunks_done": existing_doc.get("chunks_count", 0),
+            "chunks_total": existing_doc.get("chunks_count", 0),
+            "error": None,
+            "duplicate": True,
+            "started_at": datetime.utcnow().isoformat(),
+            "finished_at": datetime.utcnow().isoformat(),
+        }
+        logger.info(
+            "[UPLOAD] SHA-256 duplicate detected (%s). Reusing index for document_id=%s",
+            file_sha256, existing_doc_id,
+        )
+        return {
+            "document_id": existing_doc_id,
+            "job_id": job_id,
+            "filename": existing_doc.get("filename", clean_filename),
+            "status": "completed",
+            "duplicate": True,
+            "message": "Duplicate document detected (SHA-256 match). Existing index reused.",
+        }
+
+    # ── 5. Register job for new document ──────────────────────────────────
+    save_document_metadata(
+        document_id,
+        {
+            "document_id": document_id,
+            "filename": clean_filename,
+            "sha256": file_sha256,
+            "file_type": ext,
+            "upload_date": datetime.utcnow().isoformat(),
+            "status": "indexing",
+        },
+    )
+
     _job_store[job_id] = {
         "job_id": job_id,
         "document_id": document_id,
@@ -332,7 +392,7 @@ async def upload_document(file: UploadFile = File(...)):
         "finished_at": None,
     }
 
-    # ── 5. Start background indexing (non-blocking) ───────────────────────
+    # ── 6. Start background indexing (non-blocking) ───────────────────────
     loop = asyncio.get_event_loop()
     loop.run_in_executor(
         _executor,
@@ -342,6 +402,7 @@ async def upload_document(file: UploadFile = File(...)):
         document_id,
         filename,
         ext,
+        file_sha256,
     )
 
     return {

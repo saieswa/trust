@@ -393,11 +393,11 @@ export default function Home() {
     let documentId = null;
     let docFilename = file.name;
 
-    // ── Phase 1: POST the file — returns immediately with job_id ──────────
+    // ── Phase 1: POST the file — returns immediately with document_id and job_id ──
     try {
       const controller = new AbortController();
-      // 10-minute timeout for the file upload itself (handles very large files on slow connections)
-      const uploadTimer = setTimeout(() => controller.abort(), 10 * 60 * 1000);
+      // 60-second timeout for the file upload POST
+      const uploadTimer = setTimeout(() => controller.abort(), 60 * 1000);
       const body = new FormData();
       body.append("file", file);
       let response;
@@ -410,37 +410,110 @@ export default function Home() {
       } finally {
         clearTimeout(uploadTimer);
       }
+
+      if (!response.ok) {
+        let errorMsg = "Upload failed.";
+        try {
+          const payload = await response.json();
+          errorMsg = payload.detail ?? errorMsg;
+        } catch {}
+        throw new Error(errorMsg);
+      }
+
       const payload = await response.json();
-      if (!response.ok) throw new Error(payload.detail ?? "Upload failed.");
 
       jobId = payload.job_id;
       documentId = payload.document_id;
       docFilename = payload.filename ?? file.name;
 
-      // Register document in the list immediately (even before indexing completes)
+      // CRITICAL: File upload is complete! Reset uploading state immediately
+      setUploading(false);
+      setFile(null);
+
+      // Handle duplicate immediately (SHA-256 match found)
+      if (payload.status === "completed" || payload.duplicate) {
+        const newDoc = { document_id: documentId, filename: docFilename, indexing: false };
+        const updated = [...documents.filter((d) => d.document_id !== documentId), newDoc];
+        saveDocuments(updated);
+        setSelectedDocumentId(documentId);
+        setUploadStatus("✅ Document already indexed (SHA-256 duplicate match). Ready to query.");
+        setUploadJob({
+          job_id: jobId,
+          stage: "Completed",
+          progress_pct: 100,
+          chunks_done: payload.chunks_done ?? 0,
+          chunks_total: payload.chunks_total ?? 0,
+          status: "completed",
+          error: null,
+        });
+        return; // Reused existing index, no background polling needed!
+      }
+
+      // Register new document in the list immediately (indexing runs in background)
       const newDoc = { document_id: documentId, filename: docFilename, indexing: true };
       const updated = [...documents.filter((d) => d.document_id !== documentId), newDoc];
       saveDocuments(updated);
       setSelectedDocumentId(documentId);
-      setFile(null);
-      setUploadStatus("File uploaded — indexing in background…");
-      setUploadJob({ job_id: jobId, stage: "Queued", progress_pct: 5, chunks_done: 0, chunks_total: 0, status: "indexing", error: null });
+      setUploadStatus("✅ File uploaded — indexing in background…");
+      setUploadJob({
+        job_id: jobId,
+        stage: "Queued",
+        progress_pct: 5,
+        chunks_done: 0,
+        chunks_total: 0,
+        status: "indexing",
+        error: null,
+      });
     } catch (err) {
-      setUploadStatus(requestError(err, "Failed to upload document."));
+      const isTimeout = err.name === "AbortError";
+      const message = isTimeout
+        ? "Upload timed out after 60 seconds. Please check your network and backend server."
+        : requestError(err, "Failed to upload document.");
+      setUploadStatus(message);
       setUploading(false);
       return;
     }
 
     // ── Phase 2: Poll /api/upload/status/{job_id} every 2 seconds ─────────
+    const startTime = Date.now();
+    const MAX_POLL_MS = 5 * 60 * 1000; // 5 minute max polling limit
+
     const pollInterval = setInterval(async () => {
+      // Check for polling timeout
+      if (Date.now() - startTime > MAX_POLL_MS) {
+        clearInterval(pollInterval);
+        setUploadJob((j) => ({
+          ...j,
+          status: "failed",
+          stage: "Timed Out",
+          error: "Indexing took longer than 5 minutes.",
+        }));
+        setUploadStatus("⚠️ Indexing timed out. The file was uploaded, but indexing status could not be confirmed.");
+        return;
+      }
+
       try {
-        const res = await fetch(`${API_URL}/api/upload/status/${jobId}`);
+        const pollController = new AbortController();
+        const pollTimer = setTimeout(() => pollController.abort(), 8000);
+        let res;
+        try {
+          res = await fetch(`${API_URL}/api/upload/status/${jobId}`, {
+            signal: pollController.signal,
+          });
+        } finally {
+          clearTimeout(pollTimer);
+        }
+
         if (!res.ok) {
           // 404 means server restarted — treat as lost
           if (res.status === 404) {
             clearInterval(pollInterval);
-            setUploading(false);
-            setUploadJob((j) => ({ ...j, status: "failed", stage: "Failed", error: "Indexing job not found — the server may have restarted. The file was uploaded but indexing could not be confirmed." }));
+            setUploadJob((j) => ({
+              ...j,
+              status: "failed",
+              stage: "Failed",
+              error: "Indexing job not found — the server may have restarted.",
+            }));
             setUploadStatus("⚠️ Indexing job lost. The file was uploaded but the server restarted before indexing completed.");
           }
           return;
@@ -450,7 +523,6 @@ export default function Home() {
 
         if (job.status === "completed") {
           clearInterval(pollInterval);
-          setUploading(false);
           // Mark document as fully indexed
           setDocuments((prev) =>
             prev.map((d) => d.document_id === documentId ? { ...d, indexing: false } : d)
@@ -467,7 +539,6 @@ export default function Home() {
           setUploadStatus(`✅ Document indexed successfully${chunkMsg}. Ready to query.`);
         } else if (job.status === "failed") {
           clearInterval(pollInterval);
-          setUploading(false);
           const errDetail = job.error || "Indexing failed — check server logs for details.";
           setUploadStatus(`❌ Indexing failed: ${errDetail}`);
           // Remove document from list if indexing failed
@@ -1283,11 +1354,7 @@ export default function Home() {
                       className="btn-primary"
                       disabled={!file || uploading}
                     >
-                      {uploading && uploadJob?.status === "indexing"
-                        ? `⚙️ Indexing… (${uploadJob.progress_pct ?? 0}%)`
-                        : uploading
-                          ? "📤 Uploading…"
-                          : "Upload & Index Document"}
+                      {uploading ? "📤 Uploading…" : "Upload & Index Document"}
                     </button>
                   </div>
                 </form>

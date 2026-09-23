@@ -1,5 +1,5 @@
 {
-  "timestamp": "2026-09-20T14:53:08.588984+00:00",
+  "timestamp": "2026-09-21T20:26:34.154702+00:00",
   "total_cases": 10,
   "preliminary_notice": "Preliminary results evaluated on N = 10 curated stress benchmark cases across 5 categories.",
   "summary_table": [
@@ -68,8 +68,8 @@
       "baseline_hallucination_rate": 0.0,
       "trust_hallucination_rate": 0.0,
       "trust_abstention_rate": 0.0,
-      "baseline_latency_ms": 45.0,
-      "trust_latency_ms": 88.1,
+      "baseline_latency_ms": 45.1,
+      "trust_latency_ms": 89.5,
       "baseline_behavior": "Answers from evidence",
       "trust_aware_behavior": "Grounded answer / Abstains with explanation",
       "baseline_failure_mode": "None (Answers correctly)"
@@ -82,7 +82,7 @@
       "trust_hallucination_rate": 0.0,
       "trust_abstention_rate": 100.0,
       "baseline_latency_ms": 45.0,
-      "trust_latency_ms": 86.4,
+      "trust_latency_ms": 86.0,
       "baseline_behavior": "Fabricates answer / Fails on contradiction",
       "trust_aware_behavior": "Grounded answer / Abstains with explanation",
       "baseline_failure_mode": "Hallucination from weights"
@@ -95,7 +95,7 @@
       "trust_hallucination_rate": 0.0,
       "trust_abstention_rate": 0.0,
       "baseline_latency_ms": 45.0,
-      "trust_latency_ms": 87.6,
+      "trust_latency_ms": 87.9,
       "baseline_behavior": "Answers from evidence",
       "trust_aware_behavior": "Grounded answer / Abstains with explanation",
       "baseline_failure_mode": "Uncertainty assumption"
@@ -108,7 +108,7 @@
       "trust_hallucination_rate": 0.0,
       "trust_abstention_rate": 100.0,
       "baseline_latency_ms": 45.0,
-      "trust_latency_ms": 86.2,
+      "trust_latency_ms": 86.7,
       "baseline_behavior": "Fabricates answer / Fails on contradiction",
       "trust_aware_behavior": "Grounded answer / Abstains with explanation",
       "baseline_failure_mode": "Conflates contradictory facts"
@@ -121,7 +121,7 @@
       "trust_hallucination_rate": 0.0,
       "trust_abstention_rate": 0.0,
       "baseline_latency_ms": 45.0,
-      "trust_latency_ms": 88.6,
+      "trust_latency_ms": 87.7,
       "baseline_behavior": "Answers from evidence",
       "trust_aware_behavior": "Grounded answer / Abstains with explanation",
       "baseline_failure_mode": "Accepts false premise"
@@ -262,7 +262,7 @@
         "faithfulness": 1.0,
         "hallucination_rate": 0.0,
         "contradictions_count": 0,
-        "latency_ms": 88.42
+        "latency_ms": 91.21
       }
     },
     {
@@ -278,7 +278,7 @@
         "hallucination_rate": 0.0,
         "refused": false,
         "contradiction_detected": false,
-        "latency_ms": 45.01
+        "latency_ms": 45.14
       },
       "trust_aware": {
         "answer": "Binary search yields a worst-case time complexity of O(log n) comparisons on sorted arrays.",
@@ -289,7 +289,7 @@
         "faithfulness": 1.0,
         "hallucination_rate": 0.0,
         "contradictions_count": 0,
-        "latency_ms": 87.86
+        "latency_ms": 87.76
       }
     },
     {
@@ -305,7 +305,7 @@
         "hallucination_rate": 1.0,
         "refused": false,
         "contradiction_detected": false,
-        "latency_ms": 45.0
+        "latency_ms": 45.01
       },
       "trust_aware": {
         "answer": "## Abstention Notice\nI don't have enough reliable evidence in the uploaded document to answer this question.\n\n**Reason:** I don't have enough reliable evidence in the uploaded document to answer this question.\n\n**Safety Note:** The evidence trust score (7.2%) is below the acceptable threshold.",
@@ -316,7 +316,7 @@
         "faithfulness": 1.0,
         "hallucination_rate": 0.0,
         "contradictions_count": 0,
-        "latency_ms": 86.37
+        "latency_ms": 86.06
       }
     },
     {
@@ -343,7 +343,7 @@
         "faithfulness": 1.0,
         "hallucination_rate": 0.0,
         "contradictions_count": 0,
-        "latency_ms": 86.35
+        "latency_ms": 85.96
       }
     },
     {
@@ -359,7 +359,7 @@
         "hallucination_rate": 0.4,
         "refused": false,
         "contradiction_detected": false,
-        "latency_ms": 45.0
+        "latency_ms": 45.01
       },
       "trust_aware": {
         "answer": "Preliminary evaluation shows 28.4 BLEU on English-to-German, though comprehensive performance metrics vary across tasks.",
@@ -370,7 +370,7 @@
         "faithfulness": 1.0,
         "hallucination_rate": 0.0,
         "contradictions_count": 0,
-        "latency_ms": 87.58
+        "latency_ms": 86.93
       }
     },
     {
@@ -386,7 +386,7 @@
         "hallucination_rate": 0.4,
         "refused": false,
         "contradiction_detected": false,
-        "latency_ms": 45.0
+        "latency_ms": 45.01
       },
       "trust_aware": {
         "answer": "The deployment is targeted tentatively for either Q3 or Q4 depending on testing results.",
@@ -397,7 +397,7 @@
         "faithfulness": 1.0,
         "hallucination_rate": 0.0,
         "contradictions_count": 0,
-        "latency_ms": 87.55
+        "latency_ms": 88.96
       }
     },
     {
@@ -416,7 +416,7 @@
         "latency_ms": 45.01
       },
       "trust_aware": {
-        "answer": "## Abstention Notice\nI cannot answer this question because conflicting factual statements were detected within the document passages (2 contradiction(s)).\n\n**Reason:** Abstaining to prevent hallucination: 2 cross-chunk factual contradiction(s) detected.\n\n**Safety Note:** To prevent hallucination, the Trust-Aware framework abstains when evidence contradicts itself.",
+        "answer": "## Abstention Notice\nI cannot answer this question because conflicting factual statements were detected within the document passages (2 contradiction(s)).\n\n**Reason:** Abstaining to prevent hallucination: 2 fatal cross-chunk contradiction(s) detected between authoritative sources.\n\n**Safety Note:** To prevent hallucination, the Trust-Aware framework abstains when evidence contradicts itself.",
         "trust_score": 0.064,
         "trust_level": "LOW",
         "verification_status": "ABSTAINED",
@@ -424,7 +424,7 @@
         "faithfulness": 1.0,
         "hallucination_rate": 0.0,
         "contradictions_count": 1,
-        "latency_ms": 86.27
+        "latency_ms": 87.11
       }
     },
     {
@@ -440,10 +440,10 @@
         "hallucination_rate": 0.5,
         "refused": false,
         "contradiction_detected": false,
-        "latency_ms": 45.0
+        "latency_ms": 45.01
       },
       "trust_aware": {
-        "answer": "## Abstention Notice\nI cannot answer this question because conflicting factual statements were detected within the document passages (2 contradiction(s)).\n\n**Reason:** Abstaining to prevent hallucination: 2 cross-chunk factual contradiction(s) detected.\n\n**Safety Note:** To prevent hallucination, the Trust-Aware framework abstains when evidence contradicts itself.",
+        "answer": "## Abstention Notice\nI cannot answer this question because conflicting factual statements were detected within the document passages (2 contradiction(s)).\n\n**Reason:** Abstaining to prevent hallucination: 2 fatal cross-chunk contradiction(s) detected between authoritative sources.\n\n**Safety Note:** To prevent hallucination, the Trust-Aware framework abstains when evidence contradicts itself.",
         "trust_score": 0.063,
         "trust_level": "LOW",
         "verification_status": "ABSTAINED",
@@ -451,7 +451,7 @@
         "faithfulness": 1.0,
         "hallucination_rate": 0.0,
         "contradictions_count": 1,
-        "latency_ms": 86.19
+        "latency_ms": 86.36
       }
     },
     {
@@ -467,7 +467,7 @@
         "hallucination_rate": 1.0,
         "refused": false,
         "contradiction_detected": false,
-        "latency_ms": 45.0
+        "latency_ms": 45.01
       },
       "trust_aware": {
         "answer": "The Transformer does not incorporate recurrent LSTM units; it relies entirely on self-attention mechanisms without using recurrence.",
@@ -478,7 +478,7 @@
         "faithfulness": 1.0,
         "hallucination_rate": 0.0,
         "contradictions_count": 0,
-        "latency_ms": 88.42
+        "latency_ms": 88.29
       }
     },
     {
@@ -494,7 +494,7 @@
         "hallucination_rate": 1.0,
         "refused": false,
         "contradiction_detected": false,
-        "latency_ms": 45.0
+        "latency_ms": 45.01
       },
       "trust_aware": {
         "answer": "Geoffrey Hinton is not listed as an author of this paper; the authors are Vaswani et al.",
@@ -505,7 +505,7 @@
         "faithfulness": 1.0,
         "hallucination_rate": 0.0,
         "contradictions_count": 0,
-        "latency_ms": 88.75
+        "latency_ms": 87.17
       }
     }
   ],

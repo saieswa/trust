@@ -43,6 +43,40 @@ def get_document_metadata(document_id: str) -> Dict[str, Any]:
     all_meta = load_all_metadata()
     return all_meta.get(document_id, {})
 
+def get_document_by_sha256(file_sha256: str) -> Dict[str, Any] | None:
+    """Find document metadata by SHA-256 hash. Backfills hash for existing uploaded files if needed."""
+    if not file_sha256:
+        return None
+    all_meta = load_all_metadata()
+    # 1. Direct match in metadata
+    for doc_id, meta in all_meta.items():
+        if isinstance(meta, dict) and meta.get("sha256") == file_sha256:
+            return meta
+
+    # 2. Check existing uploaded files in uploads dir and backfill if matched
+    uploads_dir = os.path.join(metadata_dir, "uploads")
+    if os.path.exists(uploads_dir):
+        for doc_id, meta in all_meta.items():
+            if isinstance(meta, dict) and meta.get("chunks_count", 0) > 0 and "sha256" not in meta:
+                filename = meta.get("filename")
+                if filename:
+                    candidate = os.path.join(uploads_dir, f"{doc_id}_{filename}")
+                    if os.path.exists(candidate):
+                        try:
+                            import hashlib
+                            h = hashlib.sha256()
+                            with open(candidate, "rb") as f:
+                                while chunk := f.read(65536):
+                                    h.update(chunk)
+                            calculated = h.hexdigest()
+                            meta["sha256"] = calculated
+                            save_document_metadata(doc_id, meta)
+                            if calculated == file_sha256:
+                                return meta
+                        except Exception:
+                            pass
+    return None
+
 def store_contradictions(document_id: str, contradictions: list[Dict[str, Any]], query: str = "") -> None:
     """Persist detected contradictions for a document so they can later be viewed in Evidence Viewer."""
     if not document_id or not contradictions:
